@@ -8,8 +8,8 @@ export async function onRequestPost({ request, env }) {
          cccd, cccd_date, cccd_place, run_tay, can_thi, mo_hoi_tay,
          education, company, experience, salary, start_date,
          pandora_contact, pandora_interview, pandora_contractor,
-         bank_account, cccd_photo, bank_photo)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+         bank_name, bank_account, cccd_photo, cccd_photo_back, bank_photo)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     `).bind(
       b.id, b.timestamp, b.fullname, b.phone, b.email,
       Number(b.age), b.gender, b.address,
@@ -18,7 +18,8 @@ export async function onRequestPost({ request, env }) {
       b.education, b.company, Number(b.experience),
       b.salary, b.startDate,
       b.pandoraContact, b.pandoraInterview, b.pandoraContractor,
-      b.bankAccount, b.cccdPhoto || '', b.bankPhoto || ''
+      b.bankName || '', b.bankAccount,
+      b.cccdPhoto || '', b.cccdPhotoBack || '', b.bankPhoto || ''
     ).run();
 
     return Response.json({ ok: true, id: b.id });

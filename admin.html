@@ -687,17 +687,25 @@ async function openDetail(id) {
         ${df('Nhà thầu Pandora', x(d.pandora_contractor))}
 
         <div class="dg-section">Ngân hàng</div>
+        ${df('Tên ngân hàng', x(d.bank_name))}
         ${df('Số tài khoản', `<strong>${x(d.bank_account)}</strong>`)}
         ${df('Ngày gửi hồ sơ', fmtDate(d.timestamp))}
       </div>
-      <div class="photo-row">
-        <div class="photo-col">
-          <label>Ảnh CCCD</label>
-          ${d.cccd_photo ? `<img src="${d.cccd_photo}" alt="CCCD">` : '<div class="photo-none">Không có ảnh</div>'}
-        </div>
-        <div class="photo-col">
-          <label>Ảnh Số tài khoản</label>
-          ${d.bank_photo ? `<img src="${d.bank_photo}" alt="Bank">` : '<div class="photo-none">Không có ảnh</div>'}
+      <div style="margin-top:18px;">
+        <div style="font-size:0.68rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--rose);padding-bottom:8px;border-bottom:1px solid var(--rose-light);margin-bottom:14px;">Tài liệu đính kèm</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;">
+          <div class="photo-col">
+            <label>CCCD – Mặt trước</label>
+            ${d.cccd_photo ? `<img src="${d.cccd_photo}" alt="CCCD mặt trước">` : '<div class="photo-none">Không có ảnh</div>'}
+          </div>
+          <div class="photo-col">
+            <label>CCCD – Mặt sau</label>
+            ${d.cccd_photo_back ? `<img src="${d.cccd_photo_back}" alt="CCCD mặt sau">` : '<div class="photo-none">Không có ảnh</div>'}
+          </div>
+          <div class="photo-col">
+            <label>Ảnh Số tài khoản</label>
+            ${d.bank_photo ? `<img src="${d.bank_photo}" alt="Bank">` : '<div class="photo-none">Không có ảnh</div>'}
+          </div>
         </div>
       </div>`;
     document.getElementById('m-del-btn').onclick = () => confirmDel(id, d.fullname);
@@ -751,7 +759,7 @@ function exportXLSX() {
     'Run tay','Cận thị','Mồ hôi tay',
     'Học vấn','Công ty gần nhất','Năm kinh nghiệm','Lương kỳ vọng','Ngày bắt đầu',
     'Pandora đã liên hệ','Đã phỏng vấn','Nhà thầu Pandora',
-    'Số TK ngân hàng','Ngày gửi hồ sơ'
+    'Tên ngân hàng','Số TK ngân hàng','Ngày gửi hồ sơ'
   ];
 
   const rows = cache.map(d => [
@@ -760,7 +768,7 @@ function exportXLSX() {
     d.run_tay, d.can_thi, d.mo_hoi_tay,
     d.education, d.company, Number(d.experience), d.salary, d.start_date,
     d.pandora_contact, d.pandora_interview, d.pandora_contractor,
-    d.bank_account, fmtDate(d.timestamp)
+    d.bank_name, d.bank_account, fmtDate(d.timestamp)
   ]);
 
   const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
@@ -770,7 +778,7 @@ function exportXLSX() {
     {wch:8},{wch:8},{wch:10},
     {wch:10},{wch:24},{wch:8},{wch:14},{wch:12},
     {wch:16},{wch:14},{wch:16},
-    {wch:16},{wch:20}
+    {wch:24},{wch:16},{wch:20}
   ];
 
   const wb = XLSX.utils.book_new();
