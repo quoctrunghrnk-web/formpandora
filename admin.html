@@ -482,38 +482,73 @@
 </div>
 
 <script>
-// ── Auth ──────────────────────────────────────────────
-const CREDS = { admin: 'Pandora@2025' };
-let me = null;
+// ── Auth & API key ────────────────────────────────────
+let adminKey = '';  // mật khẩu = ADMIN_KEY gửi lên API
+let cache = [];     // dữ liệu đã fetch, dùng cho export & stats
 
-function doLogin() {
+async function doLogin() {
   const u = document.getElementById('lu').value.trim();
   const p = document.getElementById('lp').value;
-  if (CREDS[u] && CREDS[u] === p) {
-    me = u;
+  if (!u || !p) return;
+
+  // Thử gọi API để kiểm tra key có đúng không
+  const btn = document.querySelector('.lbtn');
+  btn.textContent = 'Đang xác thực…'; btn.disabled = true;
+  try {
+    const res = await fetch('/api/submissions', { headers: { 'X-Admin-Key': p } });
+    if (res.status === 401) throw new Error('unauthorized');
+    cache = await res.json();
+    adminKey = p;
     document.getElementById('login-wrap').style.display = 'none';
     document.getElementById('dash').style.display = 'block';
     document.getElementById('uname').textContent = u;
-    load();
-  } else {
+    renderTable(cache);
+    updateMini(cache);
+  } catch {
     document.getElementById('lerr').classList.add('on');
     document.getElementById('lp').classList.add('bad');
     document.getElementById('lp').value = '';
     document.getElementById('lp').focus();
+  } finally {
+    btn.textContent = 'Đăng nhập'; btn.disabled = false;
   }
 }
+
 function doLogout() {
   if (!confirm('Đăng xuất?')) return;
-  me = null;
+  adminKey = ''; cache = [];
   document.getElementById('dash').style.display = 'none';
   document.getElementById('login-wrap').style.display = 'flex';
   document.getElementById('lp').value = '';
   document.getElementById('lerr').classList.remove('on');
 }
 
-// ── Data ──────────────────────────────────────────────
-const getData = () => { try { return JSON.parse(localStorage.getItem('pandora_submissions')||'[]'); } catch { return []; } };
-const setData = d => localStorage.setItem('pandora_submissions', JSON.stringify(d));
+// Enter key trong login
+document.getElementById('lu').addEventListener('keydown', e => { if (e.key==='Enter') document.getElementById('lp').focus(); });
+document.getElementById('lp').addEventListener('keydown', e => { if (e.key==='Enter') doLogin(); });
+
+// ── API helpers ───────────────────────────────────────
+async function apiGet(path) {
+  const res = await fetch('/api' + path, { headers: { 'X-Admin-Key': adminKey } });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+async function apiDelete(path) {
+  const res = await fetch('/api' + path, { method: 'DELETE', headers: { 'X-Admin-Key': adminKey } });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+// ── Refresh toàn bộ dữ liệu từ server ────────────────
+async function reload() {
+  try {
+    cache = await apiGet('/submissions');
+    renderTable(cache);
+    updateMini(cache);
+  } catch (e) {
+    alert('Lỗi tải dữ liệu: ' + e.message);
+  }
+}
 
 // ── Tabs ─────────────────────────────────────────────
 function switchTab(el, tabId, title) {
@@ -525,36 +560,36 @@ function switchTab(el, tabId, title) {
   if (tabId === 'tab-stats') renderStats();
 }
 
-// ── Load ──────────────────────────────────────────────
-function load() { render(); updateMini(); }
-
-function updateMini() {
-  const d = getData();
+// ── Stats cards ───────────────────────────────────────
+function updateMini(d) {
   const today = new Date().toDateString();
   document.getElementById('s0').textContent = d.length;
-  document.getElementById('s1').textContent = d.filter(x => new Date(x.timestamp).toDateString()===today).length;
-  document.getElementById('s2').textContent = d.filter(x => x.education==='Đại học').length;
-  document.getElementById('s3').textContent = d.filter(x => x.pandoraContact==='Đã liên hệ').length;
+  document.getElementById('s1').textContent = d.filter(r => new Date(r.timestamp).toDateString()===today).length;
+  document.getElementById('s2').textContent = d.filter(r => r.education==='Đại học').length;
+  document.getElementById('s3').textContent = d.filter(r => r.pandora_contact==='Đã liên hệ').length;
   document.getElementById('total-pill').textContent = d.length + ' hồ sơ';
   document.getElementById('del-all-btn').style.display = d.length ? 'inline-flex' : 'none';
 }
 
 // ── Table ─────────────────────────────────────────────
-function render() {
+function render() { renderTable(cache); }
+
+function renderTable(all) {
   const q  = (document.getElementById('q').value||'').toLowerCase();
   const fg = document.getElementById('fg').value;
   const fe = document.getElementById('fe').value;
   const fp = document.getElementById('fp').value;
   const fc = document.getElementById('fc').value;
 
-  let rows = getData().filter(d => {
+  // D1 trả về snake_case
+  const rows = all.filter(d => {
     const mq = !q || [d.fullname,d.phone,d.email,d.cccd].some(v=>(v||'').toLowerCase().includes(q));
     return mq
       && (!fg || d.gender===fg)
       && (!fe || d.education===fe)
-      && (!fp || d.pandoraContact===fp)
-      && (!fc || d.pandoraContractor===fc);
-  }).sort((a,b) => new Date(b.timestamp)-new Date(a.timestamp));
+      && (!fp || d.pandora_contact===fp)
+      && (!fc || d.pandora_contractor===fc);
+  });
 
   const tbody = document.getElementById('tbody');
   if (!rows.length) {
@@ -568,7 +603,7 @@ function render() {
         <div class="td-name">${x(d.fullname)}</div>
         <div class="td-sub">${x(d.email)}</div>
       </td>
-      <td><div>${x(d.phone)}</div></td>
+      <td>${x(d.phone)}</td>
       <td>${d.age} / ${x(d.gender)}</td>
       <td><span class="tag tag-edu">${x(d.education)}</span></td>
       <td>
@@ -577,15 +612,15 @@ function render() {
       </td>
       <td style="white-space:nowrap;">${x(d.salary)}</td>
       <td>
-        ${htag(d.runTay,'Run tay')}
-        ${htag(d.can,'Cận')}
-        ${htag(d.moHoiTay,'Mồ hôi')}
+        ${htag(d.run_tay,'Run tay')}
+        ${htag(d.can_thi,'Cận')}
+        ${htag(d.mo_hoi_tay,'Mồ hôi')}
       </td>
       <td>
-        ${d.pandoraContact==='Đã liên hệ'
+        ${d.pandora_contact==='Đã liên hệ'
           ? `<span class="tag tag-yes">Đã liên hệ</span>`
           : `<span class="tag tag-no">Chưa</span>`}
-        ${d.pandoraContractor==='Có'
+        ${d.pandora_contractor==='Có'
           ? `<br><span class="tag tag-warn" style="margin-top:4px;">Nhà thầu</span>` : ''}
       </td>
       <td class="td-sub" style="white-space:nowrap;">${fmtDate(d.timestamp)}</td>
@@ -600,7 +635,6 @@ function htag(v, lbl) {
   const yes = v==='Có';
   return `<span class="tag ${yes?'tag-no':'tag-yes'}" style="margin:1px 0;display:inline-block;">${yes?'⚠ '+lbl:'✓ Không '+lbl}</span><br>`;
 }
-
 function x(s) {
   if (!s) return '—';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -610,60 +644,66 @@ function fmtDate(iso) {
   return d.toLocaleDateString('vi-VN') + ' ' + d.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
 }
 
-// ── Detail modal ──────────────────────────────────────
-function openDetail(id) {
-  const d = getData().find(r => r.id===id);
-  if (!d) return;
-  document.getElementById('m-title').textContent = d.fullname;
-  document.getElementById('m-body').innerHTML = `
-    <div class="dg">
-      <div class="dg-section">Thông tin cá nhân</div>
-      ${df('Mã hồ sơ', `<span class="ref-chip">${d.id}</span>`)}
-      ${df('Họ và tên', `<strong>${x(d.fullname)}</strong>`)}
-      ${df('Điện thoại', x(d.phone))}
-      ${df('Email', x(d.email))}
-      ${df('Tuổi', d.age + ' tuổi')}
-      ${df('Giới tính', x(d.gender))}
-      ${df('Nơi ở', x(d.address), true)}
-
-      <div class="dg-section">Căn cước công dân</div>
-      ${df('Số CCCD', `<strong>${x(d.cccd)}</strong>`)}
-      ${df('Ngày cấp', x(d.cccdDate))}
-      ${df('Nơi cấp', x(d.cccdPlace), true)}
-
-      <div class="dg-section">Sức khoẻ</div>
-      ${df('Run tay', badge(d.runTay))}
-      ${df('Cận thị', badge(d.can))}
-      ${df('Mồ hôi tay', badge(d.moHoiTay))}
-
-      <div class="dg-section">Học vấn & Kinh nghiệm</div>
-      ${df('Học vấn', `<span class="tag tag-edu">${x(d.education)}</span>`)}
-      ${df('Công ty gần nhất', x(d.company))}
-      ${df('Năm kinh nghiệm', d.experience + ' năm')}
-      ${df('Lương kỳ vọng', x(d.salary))}
-      ${df('Ngày bắt đầu', x(d.startDate))}
-
-      <div class="dg-section">Pandora</div>
-      ${df('Đã liên hệ', x(d.pandoraContact))}
-      ${df('Đã phỏng vấn', x(d.pandoraInterview))}
-      ${df('Nhà thầu Pandora', x(d.pandoraContractor))}
-
-      <div class="dg-section">Ngân hàng</div>
-      ${df('Số tài khoản', `<strong>${x(d.bankAccount)}</strong>`)}
-      ${df('Ngày gửi hồ sơ', fmtDate(d.timestamp))}
-    </div>
-    <div class="photo-row">
-      <div class="photo-col">
-        <label>Ảnh CCCD</label>
-        ${d.cccdPhoto ? `<img src="${d.cccdPhoto}" alt="CCCD">` : '<div class="photo-none">Không có ảnh</div>'}
-      </div>
-      <div class="photo-col">
-        <label>Ảnh Số tài khoản</label>
-        ${d.bankPhoto ? `<img src="${d.bankPhoto}" alt="Bank">` : '<div class="photo-none">Không có ảnh</div>'}
-      </div>
-    </div>`;
-  document.getElementById('m-del-btn').onclick = () => confirmDel(id);
+// ── Detail modal (fetch riêng để lấy ảnh) ────────────
+async function openDetail(id) {
+  document.getElementById('m-title').textContent = 'Đang tải…';
+  document.getElementById('m-body').innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)">🌸 Đang tải…</div>';
   document.getElementById('m-detail').classList.add('open');
+
+  try {
+    const d = await apiGet('/submissions/' + id);
+    document.getElementById('m-title').textContent = d.fullname || 'Chi tiết hồ sơ';
+    document.getElementById('m-body').innerHTML = `
+      <div class="dg">
+        <div class="dg-section">Thông tin cá nhân</div>
+        ${df('Mã hồ sơ', `<span class="ref-chip">${d.id}</span>`)}
+        ${df('Họ và tên', `<strong>${x(d.fullname)}</strong>`)}
+        ${df('Điện thoại', x(d.phone))}
+        ${df('Email', x(d.email))}
+        ${df('Tuổi', d.age + ' tuổi')}
+        ${df('Giới tính', x(d.gender))}
+        ${df('Nơi ở', x(d.address), true)}
+
+        <div class="dg-section">Căn cước công dân</div>
+        ${df('Số CCCD', `<strong>${x(d.cccd)}</strong>`)}
+        ${df('Ngày cấp', x(d.cccd_date))}
+        ${df('Nơi cấp', x(d.cccd_place), true)}
+
+        <div class="dg-section">Sức khoẻ</div>
+        ${df('Run tay', badge(d.run_tay))}
+        ${df('Cận thị', badge(d.can_thi))}
+        ${df('Mồ hôi tay', badge(d.mo_hoi_tay))}
+
+        <div class="dg-section">Học vấn & Kinh nghiệm</div>
+        ${df('Học vấn', `<span class="tag tag-edu">${x(d.education)}</span>`)}
+        ${df('Công ty gần nhất', x(d.company))}
+        ${df('Năm kinh nghiệm', d.experience + ' năm')}
+        ${df('Lương kỳ vọng', x(d.salary))}
+        ${df('Ngày bắt đầu', x(d.start_date))}
+
+        <div class="dg-section">Pandora</div>
+        ${df('Đã liên hệ', x(d.pandora_contact))}
+        ${df('Đã phỏng vấn', x(d.pandora_interview))}
+        ${df('Nhà thầu Pandora', x(d.pandora_contractor))}
+
+        <div class="dg-section">Ngân hàng</div>
+        ${df('Số tài khoản', `<strong>${x(d.bank_account)}</strong>`)}
+        ${df('Ngày gửi hồ sơ', fmtDate(d.timestamp))}
+      </div>
+      <div class="photo-row">
+        <div class="photo-col">
+          <label>Ảnh CCCD</label>
+          ${d.cccd_photo ? `<img src="${d.cccd_photo}" alt="CCCD">` : '<div class="photo-none">Không có ảnh</div>'}
+        </div>
+        <div class="photo-col">
+          <label>Ảnh Số tài khoản</label>
+          ${d.bank_photo ? `<img src="${d.bank_photo}" alt="Bank">` : '<div class="photo-none">Không có ảnh</div>'}
+        </div>
+      </div>`;
+    document.getElementById('m-del-btn').onclick = () => confirmDel(id, d.fullname);
+  } catch (e) {
+    document.getElementById('m-body').innerHTML = `<p style="color:var(--danger);padding:20px;">Lỗi: ${e.message}</p>`;
+  }
 }
 
 function df(label, val, full) {
@@ -671,37 +711,39 @@ function df(label, val, full) {
 }
 function badge(v) {
   if (!v) return '—';
-  return v==='Có'
-    ? `<span class="tag tag-no">✕ Có</span>`
-    : `<span class="tag tag-yes">✓ Không</span>`;
+  return v==='Có' ? `<span class="tag tag-no">✕ Có</span>` : `<span class="tag tag-yes">✓ Không</span>`;
 }
 
 // ── Delete ────────────────────────────────────────────
-function confirmDel(id) {
-  const d = getData().find(r=>r.id===id);
-  if (!d) return;
-  document.getElementById('confirm-txt').textContent = `Xóa hồ sơ của "${d.fullname}"? Thao tác này không thể hoàn tác.`;
-  document.getElementById('confirm-ok').onclick = () => {
-    setData(getData().filter(r=>r.id!==id));
-    closeM('m-confirm'); closeM('m-detail');
-    render(); updateMini();
+function confirmDel(id, name) {
+  document.getElementById('confirm-txt').textContent = `Xóa hồ sơ của "${name || id}"? Thao tác này không thể hoàn tác.`;
+  document.getElementById('confirm-ok').onclick = async () => {
+    try {
+      await apiDelete('/submissions/' + id);
+      closeM('m-confirm'); closeM('m-detail');
+      await reload();
+    } catch (e) { alert('Lỗi xóa: ' + e.message); }
   };
   document.getElementById('m-confirm').classList.add('open');
 }
+
 function confirmDelAll() {
   document.getElementById('confirm-txt').textContent = 'Xóa TẤT CẢ hồ sơ? Thao tác này KHÔNG THỂ hoàn tác!';
-  document.getElementById('confirm-ok').onclick = () => {
-    setData([]);
-    closeM('m-confirm'); render(); updateMini();
+  document.getElementById('confirm-ok').onclick = async () => {
+    try {
+      await apiDelete('/submissions');
+      closeM('m-confirm');
+      await reload();
+    } catch (e) { alert('Lỗi: ' + e.message); }
   };
   document.getElementById('m-confirm').classList.add('open');
 }
+
 function closeM(id) { document.getElementById(id).classList.remove('open'); }
 
 // ── Export XLSX ───────────────────────────────────────
 function exportXLSX() {
-  const data = getData();
-  if (!data.length) { alert('Chưa có dữ liệu để xuất.'); return; }
+  if (!cache.length) { alert('Chưa có dữ liệu để xuất.'); return; }
 
   const headers = [
     'Mã hồ sơ','Họ và tên','Điện thoại','Email','Tuổi','Giới tính','Nơi ở',
@@ -712,18 +754,16 @@ function exportXLSX() {
     'Số TK ngân hàng','Ngày gửi hồ sơ'
   ];
 
-  const rows = data.map(d => [
+  const rows = cache.map(d => [
     d.id, d.fullname, d.phone, d.email, Number(d.age), d.gender, d.address,
-    d.cccd, d.cccdDate, d.cccdPlace,
-    d.runTay, d.can, d.moHoiTay,
-    d.education, d.company, Number(d.experience), d.salary, d.startDate,
-    d.pandoraContact, d.pandoraInterview, d.pandoraContractor,
-    d.bankAccount, fmtDate(d.timestamp)
+    d.cccd, d.cccd_date, d.cccd_place,
+    d.run_tay, d.can_thi, d.mo_hoi_tay,
+    d.education, d.company, Number(d.experience), d.salary, d.start_date,
+    d.pandora_contact, d.pandora_interview, d.pandora_contractor,
+    d.bank_account, fmtDate(d.timestamp)
   ]);
 
   const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-
-  // Column widths
   ws['!cols'] = [
     {wch:18},{wch:22},{wch:14},{wch:26},{wch:6},{wch:8},{wch:30},
     {wch:14},{wch:12},{wch:30},
@@ -733,84 +773,35 @@ function exportXLSX() {
     {wch:16},{wch:20}
   ];
 
-  // Style header row (bold + fill) — requires xlsxjs-style variant; basic xlsx only supports limited styling
-  const range = XLSX.utils.decode_range(ws['!ref']);
-  for (let C = range.s.c; C <= range.e.c; C++) {
-    const cell = ws[XLSX.utils.encode_cell({r:0,c:C})];
-    if (cell) {
-      cell.s = {
-        font: { bold: true, color: { rgb: '9E4F5F' } },
-        fill: { fgColor: { rgb: 'F5DDE1' } },
-        alignment: { horizontal: 'center', wrapText: true }
-      };
-    }
-  }
-
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Ứng tuyển');
-
-  const date = new Date().toISOString().slice(0,10);
-  XLSX.writeFile(wb, `Pandora_UngTuyen_${date}.xlsx`);
+  XLSX.writeFile(wb, `Pandora_UngTuyen_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 
 // ── Stats tab ─────────────────────────────────────────
 function renderStats() {
-  const d = getData();
+  const d = cache;
   if (!d.length) { document.getElementById('stats-body').innerHTML='<em style="color:var(--muted)">Chưa có dữ liệu.</em>'; return; }
-
   const n = d.length;
   const cnt = (key,val) => d.filter(r=>r[key]===val).length;
   const pct = v => Math.round(v/n*100);
   const avgAge = (d.reduce((s,r)=>s+Number(r.age||0),0)/n).toFixed(1);
   const avgExp = (d.reduce((s,r)=>s+Number(r.experience||0),0)/n).toFixed(1);
-
   const bar = v => `<div class="stat-bar-wrap"><div class="stat-bar" style="width:${pct(v)}%"></div></div>`;
-
   const edu = ['Cấp 2','Cấp 3','Trung cấp','Cao đẳng','Đại học','Khác']
     .map(e=>`${e}: ${cnt('education',e)} (${pct(cnt('education',e))}%)`).join('  ·  ');
-
   document.getElementById('stats-body').innerHTML = `
     <table class="stats-table">
       <tr><td>Tổng hồ sơ</td><td><strong style="font-size:1.3rem;font-family:'Cormorant Garamond',serif;">${n}</strong></td></tr>
       <tr><td>Tuổi trung bình</td><td>${avgAge} tuổi</td></tr>
       <tr><td>Kinh nghiệm TB</td><td>${avgExp} năm</td></tr>
-      <tr>
-        <td>Nam / Nữ / Khác</td>
-        <td>${cnt('gender','Nam')} / ${cnt('gender','Nữ')} / ${cnt('gender','Khác')}
-          ${bar(cnt('gender','Nữ'))}
-        </td>
-      </tr>
+      <tr><td>Nam / Nữ / Khác</td><td>${cnt('gender','Nam')} / ${cnt('gender','Nữ')} / ${cnt('gender','Khác')}${bar(cnt('gender','Nữ'))}</td></tr>
       <tr><td>Trình độ học vấn</td><td style="font-size:0.78rem;">${edu}</td></tr>
-      <tr>
-        <td>Run tay – Có</td>
-        <td>${cnt('runTay','Có')} / ${n} (${pct(cnt('runTay','Có'))}%)
-          ${bar(cnt('runTay','Có'))}
-        </td>
-      </tr>
-      <tr>
-        <td>Cận thị – Có</td>
-        <td>${cnt('can','Có')} / ${n} (${pct(cnt('can','Có'))}%)
-          ${bar(cnt('can','Có'))}
-        </td>
-      </tr>
-      <tr>
-        <td>Mồ hôi tay – Có</td>
-        <td>${cnt('moHoiTay','Có')} / ${n} (${pct(cnt('moHoiTay','Có'))}%)
-          ${bar(cnt('moHoiTay','Có'))}
-        </td>
-      </tr>
-      <tr>
-        <td>Đã được Pandora liên hệ</td>
-        <td>${cnt('pandoraContact','Đã liên hệ')} / ${n} (${pct(cnt('pandoraContact','Đã liên hệ'))}%)
-          ${bar(cnt('pandoraContact','Đã liên hệ'))}
-        </td>
-      </tr>
-      <tr>
-        <td>Đang làm nhà thầu</td>
-        <td>${cnt('pandoraContractor','Có')} / ${n}
-          ${bar(cnt('pandoraContractor','Có'))}
-        </td>
-      </tr>
+      <tr><td>Run tay – Có</td><td>${cnt('run_tay','Có')} / ${n} (${pct(cnt('run_tay','Có'))}%)${bar(cnt('run_tay','Có'))}</td></tr>
+      <tr><td>Cận thị – Có</td><td>${cnt('can_thi','Có')} / ${n} (${pct(cnt('can_thi','Có'))}%)${bar(cnt('can_thi','Có'))}</td></tr>
+      <tr><td>Mồ hôi tay – Có</td><td>${cnt('mo_hoi_tay','Có')} / ${n} (${pct(cnt('mo_hoi_tay','Có'))}%)${bar(cnt('mo_hoi_tay','Có'))}</td></tr>
+      <tr><td>Đã được Pandora liên hệ</td><td>${cnt('pandora_contact','Đã liên hệ')} / ${n} (${pct(cnt('pandora_contact','Đã liên hệ'))}%)${bar(cnt('pandora_contact','Đã liên hệ'))}</td></tr>
+      <tr><td>Đang làm nhà thầu</td><td>${cnt('pandora_contractor','Có')} / ${n}${bar(cnt('pandora_contractor','Có'))}</td></tr>
     </table>`;
 }
 
