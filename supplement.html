@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pandora – Bổ sung thông tin ngân hàng</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --rose:       #c4687a;
+    --rose-dark:  #9e4f5f;
+    --rose-mid:   #d4879a;
+    --rose-light: #f5dde1;
+    --rose-pale:  #fdf8f8;
+    --charcoal:   #1c1c1c;
+    --text:       #2c2c2c;
+    --muted:      #8a8a8a;
+    --border:     #e8d0d4;
+    --white:      #ffffff;
+    --danger:     #b5565a;
+    --success:    #2d7a4f;
+    --shadow:     0 4px 20px rgba(196,104,122,0.14);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: var(--rose-pale);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Header */
+  .brand-header { background: var(--white); border-bottom: 1px solid var(--border); padding: 20px 0 0; text-align: center; }
+  .brand-logo { letter-spacing: 0.35em; font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 1.6rem; color: var(--charcoal); text-transform: uppercase; }
+  .brand-divider { width: 40px; height: 1px; background: var(--rose); margin: 10px auto 8px; }
+  .brand-subtitle { font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); padding-bottom: 18px; }
+  .brand-accent { height: 3px; background: linear-gradient(90deg, var(--rose-mid), var(--rose)); }
+
+  .container { max-width: 520px; margin: 0 auto; padding: 36px 16px 80px; flex: 1; }
+
+  /* Steps indicator */
+  .steps { display: flex; align-items: center; gap: 0; margin-bottom: 28px; }
+  .step { flex: 1; text-align: center; }
+  .step-circle {
+    width: 32px; height: 32px; border-radius: 50%; margin: 0 auto 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.78rem; font-weight: 600;
+    border: 2px solid var(--border); background: var(--white); color: var(--muted);
+    transition: all 0.3s;
+  }
+  .step.active .step-circle { border-color: var(--rose); background: var(--rose); color: #fff; }
+  .step.done .step-circle { border-color: var(--success); background: var(--success); color: #fff; }
+  .step-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+  .step.active .step-label { color: var(--rose); font-weight: 600; }
+  .step-line { flex: 0 0 40px; height: 1px; background: var(--border); }
+
+  /* Card */
+  .card { background: var(--white); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); overflow: hidden; }
+  .card-head {
+    padding: 16px 22px; border-bottom: 1px solid var(--rose-light);
+    background: linear-gradient(135deg, #fffafa 0%, #fdf0f2 100%);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .card-icon { font-size: 1.2rem; }
+  .card-title { font-family: 'Cormorant Garamond', serif; font-size: 1.05rem; font-weight: 600; color: var(--charcoal); }
+  .card-body { padding: 24px; }
+
+  /* Notice */
+  .notice {
+    background: var(--white); border: 1px solid var(--border);
+    border-left: 3px solid var(--rose-mid); border-radius: 8px;
+    padding: 13px 16px; margin-bottom: 22px; font-size: 0.8rem; color: var(--muted); line-height: 1.7;
+  }
+  .notice strong { color: var(--rose-dark); }
+
+  /* Fields */
+  .field { margin-bottom: 20px; }
+  .field:last-child { margin-bottom: 0; }
+  label.fl { display: block; font-size: 0.78rem; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 7px; }
+  .req { color: var(--rose); margin-left: 2px; }
+  input[type="text"], select {
+    width: 100%; border: 1px solid var(--border); background: var(--white);
+    border-radius: 6px; padding: 11px 14px; font-size: 0.92rem;
+    font-family: 'DM Sans', sans-serif; color: var(--text);
+    transition: border-color 0.2s, box-shadow 0.2s; appearance: none; -webkit-appearance: none;
+  }
+  input:focus, select:focus { outline: none; border-color: var(--rose); box-shadow: 0 0 0 3px rgba(196,104,122,0.12); }
+  input.err, select.err { border-color: var(--danger); }
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23c4687a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; cursor: pointer;
+  }
+  .ferr { font-size: 0.75rem; color: var(--danger); margin-top: 5px; display: none; }
+  .ferr.show { display: block; }
+
+  /* Verified name badge */
+  .name-badge {
+    display: flex; align-items: center; gap: 10px;
+    background: #edf7f1; border: 1px solid #a8d5bc; border-radius: 8px;
+    padding: 12px 16px; margin-bottom: 20px;
+  }
+  .name-badge-icon { font-size: 1.3rem; }
+  .name-badge-text { font-size: 0.85rem; color: var(--success); }
+  .name-badge-text strong { font-size: 1rem; display: block; margin-bottom: 1px; }
+
+  /* Existing info notice */
+  .existing-notice {
+    background: #fff8e1; border: 1px solid #ffe082; border-radius: 8px;
+    padding: 11px 15px; margin-bottom: 18px; font-size: 0.8rem; color: #5d4037;
+  }
+  .existing-notice strong { color: #3e2723; }
+
+  /* Upload */
+  .upload-wrap {
+    position: relative; border: 1.5px dashed var(--border); border-radius: 8px;
+    padding: 24px 20px; text-align: center; cursor: pointer;
+    transition: all 0.2s; background: #fffafa;
+  }
+  .upload-wrap:hover, .upload-wrap.over { border-color: var(--rose); background: var(--rose-pale); }
+  .upload-wrap input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .upload-icon { font-size: 1.8rem; margin-bottom: 8px; line-height: 1; }
+  .upload-label { font-size: 0.83rem; color: var(--muted); }
+  .upload-label strong { color: var(--rose); }
+  .upload-sub { font-size: 0.72rem; color: #ccc; margin-top: 4px; }
+  .preview-box { display: none; position: relative; margin-top: 12px; text-align: center; }
+  .preview-box img { max-width: 100%; max-height: 180px; border-radius: 6px; border: 1px solid var(--border); object-fit: contain; background: #fafafa; }
+  .preview-remove {
+    position: absolute; top: -10px; right: -6px; background: var(--rose); color: #fff;
+    border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer;
+    font-size: 12px; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+
+  /* Buttons */
+  .btn-rose {
+    width: 100%; background: var(--rose); color: #fff; border: none; border-radius: 50px;
+    padding: 13px; font-size: 0.88rem; font-weight: 500; font-family: 'DM Sans', sans-serif;
+    letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s; box-shadow: 0 4px 14px rgba(196,104,122,0.28);
+  }
+  .btn-rose:hover { background: var(--rose-dark); }
+  .btn-rose:disabled { background: #d4a5ad; box-shadow: none; cursor: not-allowed; }
+  .btn-ghost {
+    width: 100%; background: transparent; color: var(--rose); border: 1.5px solid var(--rose);
+    border-radius: 50px; padding: 11px; font-size: 0.82rem; font-weight: 500;
+    font-family: 'DM Sans', sans-serif; letter-spacing: 0.1em; text-transform: uppercase;
+    cursor: pointer; transition: all 0.2s; margin-top: 10px;
+  }
+  .btn-ghost:hover { background: var(--rose-light); }
+
+  /* Success */
+  #success-view {
+    display: none; text-align: center;
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 12px; padding: 48px 28px; box-shadow: var(--shadow);
+  }
+  .success-circle {
+    width: 72px; height: 72px; background: #edf7f1; border-radius: 50%;
+    margin: 0 auto 18px; display: flex; align-items: center; justify-content: center; font-size: 2rem;
+  }
+  #success-view h2 { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 600; color: var(--charcoal); margin-bottom: 10px; }
+  #success-view p { font-size: 0.88rem; color: var(--muted); line-height: 1.8; }
+
+  .footer-note { text-align: center; font-size: 0.72rem; color: #ccc; margin-top: 28px; }
+  .footer-note a { color: var(--rose-mid); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<div class="brand-header">
+  <div class="brand-logo">Pandora</div>
+  <div class="brand-divider"></div>
+  <div class="brand-subtitle">Bổ sung thông tin ngân hàng</div>
+  <div class="brand-accent"></div>
+</div>
+
+<div class="container">
+
+  <!-- Success view -->
+  <div id="success-view">
+    <div class="success-circle">✅</div>
+    <h2>Cập nhật thành công!</h2>
+    <p id="success-msg">Thông tin ngân hàng của bạn đã được ghi nhận.<br>Bộ phận Nhân sự sẽ liên hệ xác nhận sớm nhất.</p>
+  </div>
+
+  <!-- Main view -->
+  <div id="main-view">
+
+    <!-- Steps -->
+    <div class="steps">
+      <div class="step active" id="step1">
+        <div class="step-circle" id="sc1">1</div>
+        <div class="step-label">Xác minh</div>
+      </div>
+      <div class="step-line"></div>
+      <div class="step" id="step2">
+        <div class="step-circle" id="sc2">2</div>
+        <div class="step-label">Thông tin TK</div>
+      </div>
+    </div>
+
+    <div class="notice">
+      <strong>Hướng dẫn:</strong> Nhập <strong>số CCCD</strong> đã dùng khi đăng ký để xác minh danh tính, sau đó điền thông tin tài khoản ngân hàng. Dữ liệu sẽ được cập nhật vào hồ sơ ứng tuyển của bạn.
+    </div>
+
+    <!-- Step 1: Verify CCCD -->
+    <div id="view-step1" class="card">
+      <div class="card-head">
+        <div class="card-icon">🪪</div>
+        <div class="card-title">Bước 1 — Xác minh CCCD</div>
+      </div>
+      <div class="card-body">
+        <div class="field">
+          <label class="fl">Số căn cước công dân <span class="req">*</span></label>
+          <input type="text" id="cccd-input" placeholder="012345678901" maxlength="12"
+            inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'')">
+          <div class="ferr" id="e-cccd">Số CCCD phải có 9 – 12 chữ số</div>
+          <div class="ferr" id="e-notfound">Không tìm thấy hồ sơ với số CCCD này. Vui lòng kiểm tra lại.</div>
+        </div>
+        <button class="btn-rose" id="verify-btn" onclick="doVerify()">Xác minh →</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Bank info (hidden initially) -->
+    <div id="view-step2" style="display:none;">
+      <div id="name-badge" class="name-badge">
+        <div class="name-badge-icon">👤</div>
+        <div class="name-badge-text">
+          <strong id="verified-name">—</strong>
+          Đã xác minh danh tính thành công
+        </div>
+      </div>
+
+      <div id="existing-info" class="existing-notice" style="display:none;">
+        ⚠️ Hồ sơ của bạn đã có thông tin ngân hàng trước đó (<strong id="existing-bank"></strong>). Điền bên dưới để <strong>cập nhật lại</strong>.
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon">🏦</div>
+          <div class="card-title">Bước 2 — Thông tin tài khoản ngân hàng</div>
+        </div>
+        <div class="card-body">
+          <div class="field">
+            <label class="fl">Tên ngân hàng <span class="req">*</span></label>
+            <select id="bank-name">
+              <option value="">— Chọn ngân hàng —</option>
+              <optgroup label="Ngân hàng Nhà nước &amp; Quốc doanh">
+                <option>Agribank – Ngân hàng Nông nghiệp và PTNT</option>
+                <option>BIDV – Ngân hàng Đầu tư và Phát triển VN</option>
+                <option>VietinBank – Ngân hàng Công Thương VN</option>
+                <option>Vietcombank – Ngân hàng Ngoại Thương VN</option>
+              </optgroup>
+              <optgroup label="Ngân hàng TMCP lớn">
+                <option>ACB – Ngân hàng Á Châu</option>
+                <option>HD Bank – Ngân hàng Phát triển TP.HCM</option>
+                <option>MB Bank – Ngân hàng Quân Đội</option>
+                <option>MSB – Ngân hàng Hàng Hải</option>
+                <option>OCB – Ngân hàng Phương Đông</option>
+                <option>Sacombank – Ngân hàng Sài Gòn Thương Tín</option>
+                <option>SCB – Ngân hàng Sài Gòn</option>
+                <option>SHB – Ngân hàng Sài Gòn – Hà Nội</option>
+                <option>Techcombank – Ngân hàng Kỹ Thương VN</option>
+                <option>TPBank – Ngân hàng Tiên Phong</option>
+                <option>VIB – Ngân hàng Quốc Tế VN</option>
+                <option>VPBank – Ngân hàng Việt Nam Thịnh Vượng</option>
+              </optgroup>
+              <optgroup label="Ngân hàng TMCP khác">
+                <option>ABBank – Ngân hàng An Bình</option>
+                <option>BacABank – Ngân hàng Bắc Á</option>
+                <option>BaoViet Bank – Ngân hàng Bảo Việt</option>
+                <option>BVBank – Ngân hàng Bản Việt</option>
+                <option>CBBank – Ngân hàng Xây Dựng</option>
+                <option>DongABank – Ngân hàng Đông Á</option>
+                <option>Eximbank – Ngân hàng Xuất Nhập Khẩu VN</option>
+                <option>GPBank – Ngân hàng Dầu Khí Toàn Cầu</option>
+                <option>KienLongBank – Ngân hàng Kiên Long</option>
+                <option>LPBank – Ngân hàng Lộc Phát (LienVietPostBank)</option>
+                <option>Nam A Bank – Ngân hàng Nam Á</option>
+                <option>NCB – Ngân hàng Quốc Dân</option>
+                <option>OceanBank – Ngân hàng Đại Dương</option>
+                <option>PGBank – Ngân hàng Xăng Dầu Petrolimex</option>
+                <option>PVcomBank – Ngân hàng Đại Chúng VN</option>
+                <option>SeABank – Ngân hàng Đông Nam Á</option>
+                <option>VietBank – Ngân hàng Việt Nam Thương Tín</option>
+              </optgroup>
+              <optgroup label="Ngân hàng số / Fintech">
+                <option>Cake by VPBank</option>
+                <option>MoMo (Ví điện tử)</option>
+                <option>Timo by Ban Viet Bank</option>
+                <option>TNEX by MSB</option>
+                <option>Ubank by VPBank</option>
+              </optgroup>
+              <optgroup label="Ngân hàng nước ngoài tại VN">
+                <option>Citibank Việt Nam</option>
+                <option>HSBC Việt Nam</option>
+                <option>Shinhan Bank Việt Nam</option>
+                <option>Standard Chartered Việt Nam</option>
+                <option>Woori Bank Việt Nam</option>
+              </optgroup>
+              <option value="Khác">Khác</option>
+            </select>
+            <div class="ferr" id="e-bank-name">Vui lòng chọn ngân hàng</div>
+          </div>
+
+          <div class="field">
+            <label class="fl">Số tài khoản ngân hàng <span class="req">*</span></label>
+            <input type="text" id="bank-account" placeholder="0123456789" maxlength="20" inputmode="numeric">
+            <div class="ferr" id="e-bank-account">Vui lòng nhập số tài khoản (tối thiểu 6 số)</div>
+          </div>
+
+          <div class="field">
+            <label class="fl">Ảnh số tài khoản <span class="req">*</span> <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:0.74rem;color:#bbb;">(App ngân hàng hoặc sổ tài khoản)</span></label>
+            <div class="upload-wrap" id="uw-bank">
+              <input type="file" id="f-bank" accept="image/*" onchange="onFile(this,'pv-bank','pv-bank-img','uw-bank')">
+              <div class="upload-icon">🏦</div>
+              <div class="upload-label"><strong>Chọn ảnh</strong> hoặc kéo thả vào đây</div>
+              <div class="upload-sub">JPG · PNG · HEIC — Tối đa 10 MB</div>
+            </div>
+            <div class="preview-box" id="pv-bank">
+              <img id="pv-bank-img" src="" alt="Bank">
+              <button type="button" class="preview-remove" onclick="rmFile('f-bank','pv-bank','uw-bank')">✕</button>
+            </div>
+            <div class="ferr" id="e-f-bank">Vui lòng đính kèm ảnh tài khoản</div>
+          </div>
+
+          <button class="btn-rose" id="submit-btn" onclick="doSubmit()">Lưu thông tin ngân hàng</button>
+          <button class="btn-ghost" onclick="resetToStep1()">← Nhập lại CCCD khác</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main-view -->
+
+  <div class="footer-note">
+    <a href="/">← Quay lại form đăng ký</a> &nbsp;·&nbsp; Dữ liệu bảo mật theo NĐ 13/2023/NĐ-CP
+  </div>
+
+</div>
+
+<script>
+const imgs = {};
+
+// ── Image compression ─────────────────────────────────
+function compressImage(file, maxKB = 250) {
+  return new Promise(resolve => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      const maxDim = 1400;
+      if (width > maxDim || height > maxDim) {
+        const r = Math.min(maxDim / width, maxDim / height);
+        width = Math.round(width * r); height = Math.round(height * r);
+      }
+      const cv = document.createElement('canvas');
+      cv.width = width; cv.height = height;
+      const ctx = cv.getContext('2d');
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, width, height);
+      ctx.drawImage(img, 0, 0, width, height);
+      let q = 0.82, data;
+      do { data = cv.toDataURL('image/jpeg', q); q -= 0.08; }
+      while (data.length > maxKB * 1024 * 1.37 && q > 0.15);
+      resolve(data);
+    };
+    img.src = url;
+  });
+}
+
+async function onFile(inp, pvId, imgId, areaId) {
+  const f = inp.files[0]; if (!f) return;
+  if (f.size > 10 * 1024 * 1024) { alert('File quá lớn! Vui lòng chọn file dưới 10MB.'); inp.value = ''; return; }
+  const compressed = await compressImage(f);
+  imgs[inp.id] = compressed;
+  document.getElementById(pvId).style.display = 'block';
+  document.getElementById(imgId).src = compressed;
+  document.getElementById(areaId).style.borderColor = 'var(--rose)';
+  hideE('e-f-' + inp.id.replace('f-', ''));
+}
+function rmFile(inpId, pvId, areaId) {
+  document.getElementById(inpId).value = '';
+  delete imgs[inpId];
+  document.getElementById(pvId).style.display = 'none';
+  document.getElementById(areaId).style.borderColor = '';
+}
+
+// Drag-drop
+document.querySelectorAll('.upload-wrap').forEach(a => {
+  a.addEventListener('dragover', e => { e.preventDefault(); a.classList.add('over'); });
+  a.addEventListener('dragleave', () => a.classList.remove('over'));
+  a.addEventListener('drop', e => {
+    e.preventDefault(); a.classList.remove('over');
+    const inp = a.querySelector('input[type=file]');
+    if (e.dataTransfer.files.length) { inp.files = e.dataTransfer.files; inp.dispatchEvent(new Event('change')); }
+  });
+});
+
+// ── Error helpers ─────────────────────────────────────
+function showE(id) { const e = document.getElementById(id); if (e) e.classList.add('show'); }
+function hideE(id) { const e = document.getElementById(id); if (e) e.classList.remove('show'); }
+function setErr(id, eid, bad) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('err', bad);
+  bad ? showE(eid) : hideE(eid);
+  return bad;
+}
+
+// ── Step 1: Verify CCCD ───────────────────────────────
+async function doVerify() {
+  const cccd = document.getElementById('cccd-input').value.trim();
+  hideE('e-cccd'); hideE('e-notfound');
+
+  if (!/^\d{9,12}$/.test(cccd)) { showE('e-cccd'); return; }
+
+  const btn = document.getElementById('verify-btn');
+  btn.disabled = true; btn.textContent = 'Đang xác minh…';
+
+  try {
+    const res = await fetch('/api/supplement?cccd=' + encodeURIComponent(cccd));
+    const json = await res.json();
+
+    if (!json.ok) {
+      showE('e-notfound');
+      btn.disabled = false; btn.textContent = 'Xác minh →';
+      return;
+    }
+
+    // Chuyển sang step 2
+    document.getElementById('verified-name').textContent = json.fullname || 'Ứng viên';
+    if (json.hasBankInfo) {
+      document.getElementById('existing-info').style.display = 'block';
+      document.getElementById('existing-bank').textContent = json.bankName + ' – ' + json.bankAccount;
+    }
+
+    document.getElementById('view-step1').style.display = 'none';
+    document.getElementById('view-step2').style.display = 'block';
+
+    // Update step indicators
+    document.getElementById('step1').classList.remove('active');
+    document.getElementById('step1').classList.add('done');
+    document.getElementById('sc1').textContent = '✓';
+    document.getElementById('step2').classList.add('active');
+
+  } catch (err) {
+    alert('Lỗi kết nối. Vui lòng thử lại.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Xác minh →';
+  }
+}
+
+// Enter key on CCCD input
+document.getElementById('cccd-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doVerify();
+});
+
+// ── Step 2: Submit bank info ──────────────────────────
+async function doSubmit() {
+  const bankName = document.getElementById('bank-name').value;
+  const bankAccount = document.getElementById('bank-account').value.trim();
+  let ok = true;
+
+  if (setErr('bank-name', 'e-bank-name', !bankName)) ok = false;
+  if (setErr('bank-account', 'e-bank-account', bankAccount.length < 6)) ok = false;
+  if (!imgs['f-bank']) { showE('e-f-bank'); ok = false; } else hideE('e-f-bank');
+  if (!ok) return;
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true; btn.textContent = 'Đang lưu…';
+
+  const cccd = document.getElementById('cccd-input').value.trim();
+
+  try {
+    const res = await fetch('/api/supplement', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        cccd,
+        bankName,
+        bankAccount,
+        bankPhoto: imgs['f-bank'] || '',
+      }),
+    });
+    const json = await res.json();
+    if (!json.ok) throw new Error(json.error || 'Server error');
+
+    document.getElementById('main-view').style.display = 'none';
+    document.getElementById('success-view').style.display = 'block';
+    document.getElementById('success-msg').innerHTML =
+      `Thông tin ngân hàng của <strong>${json.fullname || 'bạn'}</strong> đã được cập nhật thành công.<br>Bộ phận Nhân sự sẽ liên hệ xác nhận sớm nhất.`;
+    window.scrollTo(0, 0);
+  } catch (err) {
+    alert('Lưu thất bại: ' + err.message + '\nVui lòng thử lại.');
+    btn.disabled = false; btn.textContent = 'Lưu thông tin ngân hàng';
+  }
+}
+
+// ── Reset về step 1 ───────────────────────────────────
+function resetToStep1() {
+  document.getElementById('view-step2').style.display = 'none';
+  document.getElementById('view-step1').style.display = 'block';
+  document.getElementById('existing-info').style.display = 'none';
+
+  document.getElementById('step1').classList.add('active');
+  document.getElementById('step1').classList.remove('done');
+  document.getElementById('sc1').textContent = '1';
+  document.getElementById('step2').classList.remove('active');
+
+  document.getElementById('cccd-input').value = '';
+  document.getElementById('bank-name').value = '';
+  document.getElementById('bank-account').value = '';
+  rmFile('f-bank', 'pv-bank', 'uw-bank');
+}
+</script>
+</body>
+</html>
