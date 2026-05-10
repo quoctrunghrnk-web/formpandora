@@ -450,6 +450,191 @@
     .btn { padding: 7px 12px; font-size: 0.72rem; }
     .content { padding: 10px; }
   }
+
+  /* ══════════════════════════════
+     FORM BUILDER (Google Forms style)
+  ══════════════════════════════ */
+  .fb-wrap { max-width: 740px; margin: 0 auto; }
+
+  /* Toolbar bar */
+  .fb-bar {
+    background: var(--white); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 20px; margin-bottom: 16px; box-shadow: var(--shadow);
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  }
+  .fb-bar-title { font-family: 'Cormorant Garamond', serif; font-size: 1.05rem; font-weight: 600; color: var(--charcoal); }
+  .fb-bar-actions { display: flex; align-items: center; gap: 10px; }
+  .fb-save-status { font-size: 0.78rem; min-width: 90px; text-align: right; }
+
+  /* Section wrapper */
+  .fb-section {
+    background: var(--white); border: 1px solid var(--border); border-radius: 10px;
+    overflow: hidden; margin-bottom: 14px; box-shadow: var(--shadow);
+  }
+  .fb-section-head {
+    padding: 11px 18px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(135deg, #fffafa 0%, #fdf0f2 100%);
+  }
+  .fb-section-title { font-size: 0.76rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--rose-dark); }
+
+  /* Locked system fields */
+  .fb-sys-list { padding: 8px 14px 12px; display: flex; flex-direction: column; gap: 5px; }
+  .fb-sys-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px; border-radius: 6px; background: #fafafa; border: 1px solid #f0eaeb;
+    font-size: 0.82rem; color: var(--muted);
+  }
+  .fb-sys-icon { font-size: 0.88rem; width: 20px; text-align: center; flex-shrink: 0; }
+  .fb-sys-label { flex: 1; }
+  .fb-sys-type { font-size: 0.7rem; color: #ccc; }
+  .fb-sys-lock { font-size: 0.75rem; color: #ddd; margin-left: 4px; }
+
+  /* Draggable custom field cards */
+  .fb-card-list {
+    padding: 10px 14px 14px; display: flex; flex-direction: column; gap: 10px; min-height: 56px;
+  }
+  .fb-empty-hint {
+    text-align: center; padding: 28px; color: var(--muted);
+    font-size: 0.84rem; border: 1.5px dashed var(--border); border-radius: 8px;
+  }
+  .fb-card {
+    background: var(--white); border: 2px solid var(--border); border-radius: 10px;
+    transition: border-color 0.18s, box-shadow 0.18s; position: relative;
+    border-left: 4px solid transparent;
+  }
+  .fb-card:hover { border-color: var(--rose-mid); box-shadow: 0 2px 14px rgba(196,104,122,0.13); }
+  .fb-card.active { border-color: var(--rose); border-left-color: var(--rose); box-shadow: 0 4px 22px rgba(196,104,122,0.20); }
+  .fb-card.dragging { opacity: 0.38; border-style: dashed; box-shadow: none; }
+  .fb-card.drag-over { border-color: var(--rose); background: var(--rose-pale); transform: scale(1.01); }
+
+  .fb-card-head {
+    display: flex; align-items: center; gap: 8px; padding: 12px 14px; cursor: pointer;
+  }
+  .fb-handle {
+    color: #ccc; font-size: 1.1rem; cursor: grab; padding: 2px 6px; flex-shrink: 0;
+    border-radius: 4px; user-select: none; touch-action: none;
+    transition: color 0.15s;
+  }
+  .fb-handle:hover { color: var(--rose-mid); }
+  .fb-handle:active { cursor: grabbing; color: var(--rose); }
+  .fb-field-icon { font-size: 1rem; flex-shrink: 0; }
+
+  .fb-label-input {
+    flex: 1; border: none; outline: none;
+    font-size: 0.95rem; font-family: 'DM Sans', sans-serif;
+    color: var(--charcoal); background: transparent; font-weight: 500; min-width: 0;
+    padding: 5px 8px; border-radius: 5px; transition: background 0.15s;
+  }
+  .fb-label-input:focus { background: var(--rose-pale); }
+  .fb-label-input::placeholder { color: #ccc; font-weight: 400; }
+
+  .fb-type-select {
+    border: 1px solid var(--border); border-radius: 6px; flex-shrink: 0;
+    padding: 6px 26px 6px 10px; font-size: 0.76rem; font-family: inherit; color: var(--muted);
+    cursor: pointer; appearance: none;
+    background: var(--white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23c4687a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 8px center;
+    transition: border-color 0.18s;
+  }
+  .fb-type-select:focus { outline: none; border-color: var(--rose); }
+
+  .fb-del-btn {
+    background: none; border: none; cursor: pointer; flex-shrink: 0;
+    color: #ddd; font-size: 1rem; padding: 5px 7px; border-radius: 5px;
+    transition: color 0.15s, background 0.15s; line-height: 1;
+  }
+  .fb-del-btn:hover { color: var(--danger); background: #fceef0; }
+
+  /* Expanded card body */
+  .fb-card-body {
+    display: none; padding: 12px 14px 14px 48px;
+    border-top: 1px solid var(--rose-light); flex-direction: column; gap: 12px;
+  }
+  .fb-card.active .fb-card-body { display: flex; }
+
+  /* Options list (for select/radio) */
+  .fb-opt-label { font-size: 0.72rem; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .fb-option-row {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+  }
+  .fb-option-bullet { color: var(--muted); font-size: 0.85rem; flex-shrink: 0; }
+  .fb-option-input {
+    flex: 1; border: none; border-bottom: 1.5px solid var(--border);
+    padding: 5px 6px; font-size: 0.87rem; font-family: inherit; background: transparent; outline: none;
+    color: var(--text); transition: border-color 0.18s;
+  }
+  .fb-option-input:focus { border-bottom-color: var(--rose); }
+  .fb-option-del {
+    background: none; border: none; color: #ccc; cursor: pointer;
+    font-size: 0.85rem; padding: 3px 5px; border-radius: 4px; line-height: 1;
+    transition: color 0.15s;
+  }
+  .fb-option-del:hover { color: var(--danger); }
+  .fb-add-option-btn {
+    background: none; border: none; font-family: inherit; cursor: pointer;
+    font-size: 0.78rem; color: var(--rose); display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 0; transition: color 0.15s;
+  }
+  .fb-add-option-btn:hover { color: var(--rose-dark); }
+
+  /* Card footer checkboxes */
+  .fb-card-footer {
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    padding-top: 10px; border-top: 1px solid var(--rose-light);
+  }
+  .fb-check {
+    display: flex; align-items: center; gap: 6px; font-size: 0.78rem;
+    color: var(--muted); cursor: pointer; user-select: none;
+  }
+  .fb-check input { accent-color: var(--rose); cursor: pointer; width: 14px; height: 14px; }
+
+  /* Add field type picker */
+  .fb-add-bar {
+    background: var(--white); border: 1.5px dashed var(--border); border-radius: 10px;
+    padding: 16px; margin-bottom: 20px; transition: border-color 0.18s;
+  }
+  .fb-add-bar:hover { border-color: var(--rose-mid); }
+  .fb-add-bar-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 12px; }
+  .fb-type-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .fb-type-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    padding: 10px 16px; border: 1.5px solid var(--border); border-radius: 8px;
+    cursor: pointer; background: var(--white); font-family: inherit;
+    transition: all 0.18s; min-width: 76px;
+  }
+  .fb-type-btn:hover { border-color: var(--rose); background: var(--rose-pale); transform: translateY(-1px); box-shadow: 0 3px 10px rgba(196,104,122,0.15); }
+  .fb-type-btn-icon { font-size: 1.3rem; }
+  .fb-type-btn-label { font-size: 0.7rem; color: var(--muted); text-align: center; white-space: nowrap; }
+
+  /* ── Preview modal ── */
+  .preview-wrap { max-width: 580px; margin: 0 auto; }
+  .preview-header { text-align: center; padding: 20px 0 22px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+  .preview-header-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 700; letter-spacing: 0.3em; text-transform: uppercase; color: var(--charcoal); }
+  .preview-header-sub { font-size: 0.68rem; letter-spacing: 0.18em; color: var(--muted); text-transform: uppercase; margin-top: 6px; }
+  .preview-section { background: var(--white); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 14px; overflow: hidden; }
+  .preview-section-head { display: flex; align-items: center; gap: 10px; padding: 12px 18px; background: linear-gradient(135deg,#fffafa,#fdf0f2); border-bottom: 1px solid var(--rose-light); }
+  .preview-section-num { width: 22px; height: 22px; background: var(--rose); color: #fff; border-radius: 50%; font-size: 0.68rem; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .preview-section-title { font-family: 'Cormorant Garamond', serif; font-size: 0.98rem; font-weight: 600; color: var(--charcoal); }
+  .preview-body { padding: 16px 18px; display: flex; flex-direction: column; gap: 14px; }
+  .preview-field-label { font-size: 0.74rem; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 5px; }
+  .preview-input-mock {
+    border: 1px solid var(--border); border-radius: 6px; padding: 9px 13px;
+    font-size: 0.88rem; color: #ccc; background: #fafafa; font-family: 'DM Sans', sans-serif;
+  }
+  .preview-pill-group { display: flex; flex-wrap: wrap; gap: 7px; }
+  .preview-pill { padding: 7px 14px; border: 1.5px solid var(--border); border-radius: 50px; font-size: 0.82rem; color: var(--muted); }
+  .preview-file-mock { border: 1.5px dashed var(--border); border-radius: 8px; padding: 18px; text-align: center; color: #ccc; font-size: 0.82rem; background: #fafafa; }
+  .preview-textarea-mock { min-height: 72px; border: 1px solid var(--border); border-radius: 6px; background: #fafafa; }
+  .preview-consent { background: var(--rose-pale); border: 1px solid var(--rose-light); border-radius: 8px; padding: 14px; font-size: 0.78rem; color: var(--muted); margin-bottom: 14px; }
+  .preview-submit { width: 100%; background: var(--rose); opacity: 0.7; color: #fff; border: none; border-radius: 50px; padding: 13px; font-size: 0.85rem; font-weight: 500; font-family: inherit; letter-spacing: 0.12em; text-transform: uppercase; cursor: default; }
+
+  @media (max-width: 600px) {
+    .fb-type-grid { gap: 6px; }
+    .fb-type-btn { min-width: 64px; padding: 8px 10px; }
+    .fb-type-btn-label { font-size: 0.65rem; }
+    .fb-card-footer { gap: 10px; }
+    .fb-handle { font-size: 1rem; }
+  }
 </style>
 </head>
 <body>
@@ -608,18 +793,10 @@
         </div>
       </div>
 
-      <!-- ── TAB: CUSTOMIZE ── -->
+      <!-- ── TAB: CUSTOMIZE / FORM BUILDER ── -->
       <div id="tab-customize" style="display:none;">
-        <div class="sc">
-          <div class="sc-head">
-            <div class="sc-title">Trường tuỳ chỉnh</div>
-            <div class="toolbar">
-              <button class="btn btn-rose btn-sm" onclick="openFieldModal()">＋ Thêm trường mới</button>
-            </div>
-          </div>
-          <div id="cf-list-body">
-            <div class="cf-empty">Đang tải…</div>
-          </div>
+        <div id="cf-list-body">
+          <div class="cf-empty">Đang tải…</div>
         </div>
       </div>
 
@@ -643,53 +820,17 @@
   </div>
 </div>
 
-<!-- Modal: Field create/edit -->
-<div class="overlay" id="m-field">
-  <div class="modal" style="max-width:520px;">
+<!-- Modal: Preview form -->
+<div class="overlay" id="m-preview">
+  <div class="modal" style="max-width:640px;">
     <div class="modal-head">
-      <div class="modal-head-title" id="mf-title">Thêm trường tuỳ chỉnh</div>
-      <button class="modal-close" onclick="closeM('m-field')">✕</button>
+      <div class="modal-head-title">👁 Xem trước biểu mẫu</div>
+      <button class="modal-close" onclick="closeM('m-preview')">✕</button>
     </div>
-    <div class="modal-body">
-      <input type="hidden" id="mf-id">
-      <div class="mfield">
-        <label>Tên trường (label) <span style="color:var(--rose)">*</span></label>
-        <input type="text" id="mf-label" placeholder="VD: Kích thước giày, Mã nhân viên…" maxlength="100">
-      </div>
-      <div class="mfield-row">
-        <div class="mfield">
-          <label>Kiểu nhập</label>
-          <select id="mf-type" onchange="toggleOptions()">
-            <option value="text">Văn bản ngắn</option>
-            <option value="textarea">Văn bản dài</option>
-            <option value="number">Số</option>
-            <option value="date">Ngày</option>
-            <option value="select">Danh sách chọn</option>
-            <option value="radio">Chọn một (radio)</option>
-          </select>
-        </div>
-        <div class="mfield">
-          <label>Thứ tự (position)</label>
-          <input type="number" id="mf-pos" value="999" min="1" max="9999">
-        </div>
-      </div>
-      <div class="mfield" id="mf-options-wrap" style="display:none;">
-        <label>Các lựa chọn <span style="color:var(--muted);text-transform:none;font-weight:400;">(mỗi dòng 1 lựa chọn)</span></label>
-        <textarea id="mf-options" rows="4" placeholder="Lựa chọn 1&#10;Lựa chọn 2&#10;Lựa chọn 3"></textarea>
-        <div class="mfield-hint">Mỗi dòng = một lựa chọn. Ứng viên sẽ thấy danh sách này.</div>
-      </div>
-      <div class="mfield">
-        <label>Hiển thị &amp; bắt buộc</label>
-        <div class="mcheck-row">
-          <label class="mcheck"><input type="checkbox" id="mf-form" checked> Hiện trong form đăng ký</label>
-          <label class="mcheck"><input type="checkbox" id="mf-supp"> Hiện trong form bổ sung</label>
-          <label class="mcheck"><input type="checkbox" id="mf-req"> Bắt buộc điền</label>
-        </div>
-      </div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost btn-sm" onclick="closeM('m-field')">Hủy</button>
-      <button class="btn btn-rose btn-sm" onclick="saveField()">Lưu trường</button>
+    <div class="modal-body" id="m-preview-body" style="max-height:75vh;overflow-y:auto;"></div>
+    <div class="modal-foot" style="justify-content:space-between;align-items:center;">
+      <span style="font-size:0.76rem;color:var(--muted);">Đây là bản xem trước — form thực tế tại <a href="/" target="_blank" style="color:var(--rose);">trang đăng ký</a></span>
+      <button class="btn btn-outline btn-sm" onclick="closeM('m-preview')">Đóng</button>
     </div>
   </div>
 </div>
@@ -1149,87 +1290,417 @@ document.querySelectorAll('.sb-item').forEach(el => {
   });
 });
 
-// ── Custom fields CRUD ────────────────────────────────
-function renderFieldsTab() {
+// ══════════════════════════════════════════════════════
+//  FORM BUILDER  (Google Forms style)
+// ══════════════════════════════════════════════════════
+let fbFields = [];   // working copy of customFieldDefs
+let fbActiveIdx = null;
+let fbDragSrc = null;
+const fbSaveTimers = {};
+
+const FIELD_TYPES = [
+  { type:'text',     icon:'✏️', label:'Văn bản' },
+  { type:'number',   icon:'🔢', label:'Số' },
+  { type:'date',     icon:'📅', label:'Ngày' },
+  { type:'textarea', icon:'📝', label:'Đoạn văn' },
+  { type:'select',   icon:'▾',  label:'Danh sách' },
+  { type:'radio',    icon:'⊙',  label:'Chọn một' },
+];
+
+const SYSTEM_FIELDS = [
+  { icon:'👤', label:'Họ và tên',                         type:'Văn bản' },
+  { icon:'📱', label:'Số điện thoại',                     type:'Điện thoại' },
+  { icon:'✉️', label:'Email',                             type:'Email' },
+  { icon:'🎂', label:'Tuổi',                              type:'Số' },
+  { icon:'🚻', label:'Giới tính',                         type:'Radio' },
+  { icon:'📍', label:'Nơi ở hiện tại',                    type:'Văn bản' },
+  { icon:'🪪', label:'Số CCCD',                           type:'Văn bản' },
+  { icon:'📅', label:'Ngày & Nơi cấp CCCD',              type:'Ngày + Văn bản' },
+  { icon:'💊', label:'Run tay / Cận thị / Mồ hôi tay',  type:'Radio × 3' },
+  { icon:'🎓', label:'Trình độ học vấn',                  type:'Danh sách' },
+  { icon:'💼', label:'Công ty & Kinh nghiệm',             type:'Văn bản + Số' },
+  { icon:'💰', label:'Lương kỳ vọng & Ngày bắt đầu',     type:'Văn bản + Ngày' },
+  { icon:'💍', label:'Pandora liên hệ / PV / Nhà thầu', type:'Radio × 3' },
+  { icon:'🏦', label:'Ngân hàng & Số tài khoản',          type:'Danh sách + Văn bản' },
+  { icon:'📷', label:'Ảnh CCCD mặt trước & mặt sau',     type:'Ảnh × 2' },
+  { icon:'🏧', label:'Ảnh số tài khoản ngân hàng',        type:'Ảnh' },
+];
+
+// ── Render form builder ───────────────────────────────
+function renderFieldsTab() { renderFormBuilder(); }
+
+function renderFormBuilder() {
+  fbFields = customFieldDefs.map(f => ({ ...f })); // deep copy
   const body = document.getElementById('cf-list-body');
-  if (!customFieldDefs.length) {
-    body.innerHTML = `<div class="cf-empty">Chưa có trường nào. Nhấn <strong>"＋ Thêm trường mới"</strong> để bắt đầu.</div>`;
-    return;
+  body.innerHTML = buildBuilderHTML();
+  // Re-attach drag listeners after render
+  document.querySelectorAll('.fb-card').forEach((card, i) => {
+    card.addEventListener('dragstart', e => fbDragStart(e, i));
+    card.addEventListener('dragover',  e => fbDragOver(e, i));
+    card.addEventListener('drop',      e => fbDrop(e, i));
+    card.addEventListener('dragend',   fbDragEnd);
+  });
+}
+
+function buildBuilderHTML() {
+  return `<div class="fb-wrap">
+  <!-- Top bar -->
+  <div class="fb-bar">
+    <div class="fb-bar-title">✏️ Trình tạo biểu mẫu</div>
+    <div class="fb-bar-actions">
+      <span class="fb-save-status" id="fb-save-status"></span>
+      <button class="btn btn-ghost btn-sm" onclick="openPreview()">👁 Xem trước</button>
+    </div>
+  </div>
+
+  <!-- Locked system fields -->
+  <div class="fb-section">
+    <div class="fb-section-head">
+      <div class="fb-section-title">🔒 Trường hệ thống — cố định</div>
+      <span style="font-size:0.71rem;color:var(--muted);">Không thể chỉnh sửa hoặc xoá</span>
+    </div>
+    <div class="fb-sys-list">
+      ${SYSTEM_FIELDS.map(f => `
+        <div class="fb-sys-item">
+          <span class="fb-sys-icon">${f.icon}</span>
+          <span class="fb-sys-label">${f.label}</span>
+          <span class="fb-sys-type">${f.type}</span>
+          <span class="fb-sys-lock">🔒</span>
+        </div>`).join('')}
+    </div>
+  </div>
+
+  <!-- Custom fields (draggable) -->
+  <div class="fb-section">
+    <div class="fb-section-head">
+      <div class="fb-section-title">✨ Trường tuỳ chỉnh</div>
+      <span style="font-size:0.71rem;color:var(--muted);">${fbFields.length} trường · Kéo ⠿ để sắp xếp</span>
+    </div>
+    <div class="fb-card-list" id="fb-card-list">
+      ${fbFields.length
+        ? fbFields.map((f, i) => buildFieldCard(f, i)).join('')
+        : `<div class="fb-empty-hint">Chưa có trường nào.<br>Chọn kiểu bên dưới để thêm câu hỏi đầu tiên ↓</div>`}
+    </div>
+  </div>
+
+  <!-- Add new field -->
+  <div class="fb-add-bar">
+    <div class="fb-add-bar-label">＋ Thêm câu hỏi mới — chọn kiểu nhập liệu</div>
+    <div class="fb-type-grid">
+      ${FIELD_TYPES.map(t => `
+        <button class="fb-type-btn" onclick="fbAddField('${t.type}')">
+          <span class="fb-type-btn-icon">${t.icon}</span>
+          <span class="fb-type-btn-label">${t.label}</span>
+        </button>`).join('')}
+    </div>
+  </div>
+</div>`;
+}
+
+function buildFieldCard(f, i) {
+  const typeIcon = {text:'✏️',number:'🔢',date:'📅',textarea:'📝',select:'▾',radio:'⊙'}[f.type] || '📋';
+  const hasOpts = f.type === 'select' || f.type === 'radio';
+  const opts = (f.options || '').split('\n').filter(Boolean);
+  const isActive = i === fbActiveIdx;
+
+  return `<div class="fb-card${isActive?' active':''}" id="fbc-${i}" draggable="true">
+  <div class="fb-card-head" onclick="fbToggle(${i})">
+    <span class="fb-handle" ondragstart="event.stopPropagation()" draggable="false">⠿</span>
+    <span class="fb-field-icon">${typeIcon}</span>
+    <input class="fb-label-input" type="text" value="${x(f.label)}"
+      placeholder="Nhập tên câu hỏi…" maxlength="100"
+      onclick="event.stopPropagation()"
+      oninput="fbFields[${i}].label=this.value; fbScheduleSave(${i})">
+    <select class="fb-type-select" onclick="event.stopPropagation()"
+      onchange="fbFields[${i}].type=this.value; fbScheduleSave(${i}); renderFormBuilder(); fbActiveIdx=${i}; renderFormBuilder();">
+      ${FIELD_TYPES.map(t=>`<option value="${t.type}"${f.type===t.type?' selected':''}>${t.label}</option>`).join('')}
+    </select>
+    <button class="fb-del-btn" title="Xoá trường" onclick="event.stopPropagation(); fbDelete(${i})">🗑</button>
+  </div>
+  <div class="fb-card-body">
+    ${hasOpts ? `<div>
+      <div class="fb-opt-label">Các lựa chọn:</div>
+      ${opts.map((o,oi) => `
+        <div class="fb-option-row">
+          <span class="fb-option-bullet">${f.type==='radio'?'○':'☐'}</span>
+          <input class="fb-option-input" type="text" value="${x(o)}"
+            placeholder="Lựa chọn ${oi+1}"
+            oninput="fbUpdateOption(${i},${oi},this.value)">
+          <button class="fb-option-del" onclick="fbRemoveOption(${i},${oi})">✕</button>
+        </div>`).join('')}
+      <button class="fb-add-option-btn" onclick="fbAddOption(${i})">＋ Thêm lựa chọn</button>
+    </div>` : ''}
+    <div class="fb-card-footer">
+      <label class="fb-check">
+        <input type="checkbox" ${f.required?'checked':''} onchange="fbFields[${i}].required=this.checked?1:0; fbScheduleSave(${i})">
+        Bắt buộc
+      </label>
+      <label class="fb-check">
+        <input type="checkbox" ${f.show_in_form?'checked':''} onchange="fbFields[${i}].show_in_form=this.checked?1:0; fbScheduleSave(${i})">
+        Form đăng ký
+      </label>
+      <label class="fb-check">
+        <input type="checkbox" ${f.show_in_supplement?'checked':''} onchange="fbFields[${i}].show_in_supplement=this.checked?1:0; fbScheduleSave(${i})">
+        Form bổ sung
+      </label>
+    </div>
+  </div>
+</div>`;
+}
+
+// ── Card toggle ───────────────────────────────────────
+function fbToggle(i) {
+  fbActiveIdx = (fbActiveIdx === i) ? null : i;
+  document.querySelectorAll('.fb-card').forEach((c, idx) => c.classList.toggle('active', idx === fbActiveIdx));
+}
+
+// ── Add field ─────────────────────────────────────────
+async function fbAddField(type) {
+  const maxPos = fbFields.length ? Math.max(...fbFields.map(f => f.position || 0)) : 0;
+  const nf = { id: null, label: '', type, options: '', required: 0, show_in_form: 1, show_in_supplement: 0, position: maxPos + 10 };
+  fbFields.push(nf);
+  fbActiveIdx = fbFields.length - 1;
+  renderFormBuilder();
+  // Focus new card label
+  setTimeout(() => {
+    const inp = document.querySelector(`#fbc-${fbActiveIdx} .fb-label-input`);
+    if (inp) inp.focus();
+  }, 60);
+  await fbSaveAt(fbFields.length - 1);
+}
+
+// ── Delete field ──────────────────────────────────────
+async function fbDelete(i) {
+  const f = fbFields[i];
+  if (!confirm(`Xoá trường "${f.label || '(chưa đặt tên)'}"?\nDữ liệu đã thu thập vẫn còn trong DB.`)) return;
+  if (f.id) {
+    try { await fetch('/api/fields/' + f.id, { method: 'DELETE', headers: { 'X-Admin-Key': adminKey } }); }
+    catch (e) { alert('Lỗi xoá: ' + e.message); return; }
   }
-  const typeLabel = { text:'Văn bản', textarea:'Đoạn văn', number:'Số', date:'Ngày', select:'Danh sách', radio:'Chọn một' };
-  body.innerHTML = `<div class="cf-list">` + customFieldDefs.map(f => `
-    <div class="cf-item">
-      <div class="cf-item-drag">⠿</div>
-      <div class="cf-item-info">
-        <div class="cf-item-label">${x(f.label)}</div>
-        <div class="cf-item-meta">
-          <span>${typeLabel[f.type] || f.type}</span>
-          &nbsp;·&nbsp; Thứ tự: ${f.position}
-          &nbsp;·&nbsp;
-          ${f.show_in_form ? '<span class="cf-tag cf-tag-form">Form ĐK</span>' : ''}
-          ${f.show_in_supplement ? '<span class="cf-tag cf-tag-supp">Form bổ sung</span>' : ''}
-          ${f.required ? '<span class="cf-tag cf-tag-req">Bắt buộc</span>' : ''}
-        </div>
-      </div>
-      <button class="btn btn-outline btn-sm" onclick="openFieldModal(${JSON.stringify(f).replace(/"/g,'&quot;')})">Sửa</button>
-      <button class="btn btn-ghost btn-sm" onclick="deleteField('${f.id}','${x(f.label)}')">Xóa</button>
-    </div>`).join('') + `</div>`;
+  fbFields.splice(i, 1);
+  fbActiveIdx = null;
+  customFieldDefs = [...fbFields];
+  buildColPanel();
+  renderFormBuilder();
 }
 
-function toggleOptions() {
-  const t = document.getElementById('mf-type').value;
-  document.getElementById('mf-options-wrap').style.display = (t==='select'||t==='radio') ? 'block' : 'none';
+// ── Options helpers ───────────────────────────────────
+function fbUpdateOption(fi, oi, val) {
+  const arr = (fbFields[fi].options || '').split('\n');
+  arr[oi] = val;
+  fbFields[fi].options = arr.join('\n');
+  fbScheduleSave(fi);
+}
+function fbAddOption(fi) {
+  fbFields[fi].options = ((fbFields[fi].options || '').trimEnd()) + '\nLựa chọn mới';
+  fbActiveIdx = fi;
+  renderFormBuilder();
+  // Focus the last input
+  const inputs = document.querySelectorAll(`#fbc-${fi} .fb-option-input`);
+  if (inputs.length) { const last = inputs[inputs.length - 1]; last.focus(); last.select(); }
+}
+function fbRemoveOption(fi, oi) {
+  const arr = (fbFields[fi].options || '').split('\n').filter(Boolean);
+  arr.splice(oi, 1);
+  fbFields[fi].options = arr.join('\n');
+  fbActiveIdx = fi;
+  fbScheduleSave(fi);
+  renderFormBuilder();
 }
 
-function openFieldModal(f = null) {
-  document.getElementById('mf-id').value   = f ? f.id : '';
-  document.getElementById('mf-title').textContent = f ? 'Chỉnh sửa trường' : 'Thêm trường tuỳ chỉnh';
-  document.getElementById('mf-label').value = f ? f.label : '';
-  document.getElementById('mf-type').value  = f ? f.type  : 'text';
-  document.getElementById('mf-options').value = f ? (f.options || '') : '';
-  document.getElementById('mf-pos').value   = f ? f.position : 999;
-  document.getElementById('mf-form').checked = f ? !!f.show_in_form : true;
-  document.getElementById('mf-supp').checked = f ? !!f.show_in_supplement : false;
-  document.getElementById('mf-req').checked  = f ? !!f.required : false;
-  toggleOptions();
-  document.getElementById('m-field').classList.add('open');
-  setTimeout(() => document.getElementById('mf-label').focus(), 80);
+// ── Save (debounced) ──────────────────────────────────
+function fbScheduleSave(i) {
+  fbSetStatus('<span style="color:var(--muted)">Đang lưu…</span>');
+  clearTimeout(fbSaveTimers[i]);
+  fbSaveTimers[i] = setTimeout(() => fbSaveAt(i), 900);
 }
 
-async function saveField() {
-  const label = document.getElementById('mf-label').value.trim();
-  if (!label) { document.getElementById('mf-label').focus(); return; }
-  const id = document.getElementById('mf-id').value;
+async function fbSaveAt(i) {
+  const f = fbFields[i];
   const body = {
-    label,
-    type:             document.getElementById('mf-type').value,
-    options:          document.getElementById('mf-options').value.trim(),
-    position:         Number(document.getElementById('mf-pos').value) || 999,
-    showInForm:       document.getElementById('mf-form').checked,
-    showInSupplement: document.getElementById('mf-supp').checked,
-    required:         document.getElementById('mf-req').checked,
+    label: f.label || '(Chưa đặt tên)',
+    type: f.type, options: f.options || '',
+    required: f.required ? 1 : 0,
+    showInForm: !!f.show_in_form,
+    showInSupplement: !!f.show_in_supplement,
+    position: f.position,
   };
   try {
-    const res = id
-      ? await fetch('/api/fields/' + id, { method:'PUT', headers:{'Content-Type':'application/json','X-Admin-Key':adminKey}, body:JSON.stringify(body) })
-      : await fetch('/api/fields',        { method:'POST',headers:{'Content-Type':'application/json','X-Admin-Key':adminKey}, body:JSON.stringify(body) });
-    const json = await res.json();
-    if (!json.ok && !json.id) throw new Error(JSON.stringify(json));
-    closeM('m-field');
-    await reload();
-    renderFieldsTab();
+    if (f.id) {
+      await fetch('/api/fields/' + f.id, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Key': adminKey },
+        body: JSON.stringify(body),
+      });
+    } else {
+      const res = await fetch('/api/fields', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Key': adminKey },
+        body: JSON.stringify(body),
+      });
+      const json = await res.json();
+      if (json.id) fbFields[i].id = json.id;
+    }
+    customFieldDefs = [...fbFields];
     buildColPanel();
-  } catch (e) { alert('Lỗi lưu trường: ' + e.message); }
+    fbSetStatus('<span style="color:var(--success)">✓ Đã lưu</span>', 2200);
+  } catch (e) {
+    fbSetStatus('<span style="color:var(--danger)">✕ Lỗi lưu</span>', 3000);
+  }
 }
 
-async function deleteField(id, label) {
-  if (!confirm(`Xóa trường "${label}"? Dữ liệu đã nhập sẽ vẫn còn trong DB nhưng sẽ không hiển thị nữa.`)) return;
+async function fbSaveAllPositions() {
+  fbSetStatus('<span style="color:var(--muted)">Đang lưu thứ tự…</span>');
   try {
-    await fetch('/api/fields/' + id, { method:'DELETE', headers:{'X-Admin-Key':adminKey} });
-    await reload();
-    renderFieldsTab();
+    await Promise.all(fbFields.filter(f => f.id).map((f, i) =>
+      fetch('/api/fields/' + f.id, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Key': adminKey },
+        body: JSON.stringify({ label: f.label || '(Chưa đặt tên)', type: f.type, options: f.options || '',
+          required: f.required ? 1 : 0, showInForm: !!f.show_in_form,
+          showInSupplement: !!f.show_in_supplement, position: (i + 1) * 10 }),
+      })
+    ));
+    customFieldDefs = [...fbFields];
     buildColPanel();
-  } catch (e) { alert('Lỗi xóa: ' + e.message); }
+    fbSetStatus('<span style="color:var(--success)">✓ Đã lưu thứ tự</span>', 2200);
+  } catch {
+    fbSetStatus('<span style="color:var(--danger)">✕ Lỗi lưu thứ tự</span>', 3000);
+  }
+}
+
+let fbStatusTimer;
+function fbSetStatus(html, clearAfter = 0) {
+  const el = document.getElementById('fb-save-status');
+  if (!el) return;
+  el.innerHTML = html;
+  clearTimeout(fbStatusTimer);
+  if (clearAfter) fbStatusTimer = setTimeout(() => { if (el) el.innerHTML = ''; }, clearAfter);
+}
+
+// ── Drag & Drop ───────────────────────────────────────
+function fbDragStart(e, i) {
+  fbDragSrc = i;
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(() => document.getElementById('fbc-' + i)?.classList.add('dragging'), 0);
+}
+function fbDragOver(e, i) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  document.querySelectorAll('.fb-card').forEach((c, idx) => c.classList.toggle('drag-over', idx === i && i !== fbDragSrc));
+}
+function fbDrop(e, i) {
+  e.preventDefault();
+  if (fbDragSrc === null || fbDragSrc === i) return;
+  const [moved] = fbFields.splice(fbDragSrc, 1);
+  fbFields.splice(i, 0, moved);
+  fbFields.forEach((f, idx) => { f.position = (idx + 1) * 10; });
+  fbDragSrc = null; fbActiveIdx = null;
+  renderFormBuilder();
+  fbSaveAllPositions();
+}
+function fbDragEnd() {
+  fbDragSrc = null;
+  document.querySelectorAll('.fb-card').forEach(c => c.classList.remove('dragging', 'drag-over'));
+}
+
+// ── Preview modal ─────────────────────────────────────
+const PREVIEW_SECTIONS = [
+  { num:1, title:'Thông tin cá nhân', fields:[
+    {label:'Họ và tên',         type:'text',   req:true,  ph:'Nguyễn Văn A'},
+    {label:'Số điện thoại',      type:'text',   req:true,  ph:'0912 345 678'},
+    {label:'Email',              type:'text',   req:true,  ph:'email@example.com'},
+    {label:'Tuổi',               type:'number', req:true,  ph:'25'},
+    {label:'Giới tính',          type:'radio',  req:true,  options:'Nam\nNữ\nKhác'},
+    {label:'Nơi ở hiện tại',     type:'text',   req:true,  ph:'Phường/Xã, Quận/Huyện, Tỉnh/TP'},
+  ]},
+  { num:2, title:'Căn cước công dân', fields:[
+    {label:'Số CCCD',    type:'text', req:true, ph:'012345678901'},
+    {label:'Ngày cấp',   type:'date', req:true},
+    {label:'Nơi cấp',    type:'text', req:true, ph:'Cục CSQL HKTT…'},
+  ]},
+  { num:3, title:'Thông tin sức khoẻ', fields:[
+    {label:'Run tay?',           type:'radio', req:true, options:'Không\nCó'},
+    {label:'Cận thị?',           type:'radio', req:true, options:'Không\nCó'},
+    {label:'Dễ đổ mồ hôi tay?', type:'radio', req:true, options:'Không\nCó'},
+  ]},
+  { num:4, title:'Học vấn & Kinh nghiệm', fields:[
+    {label:'Trình độ học vấn',        type:'select', req:true, options:'Cấp 2\nCấp 3\nTrung cấp\nCao đẳng\nĐại học'},
+    {label:'Tên công ty gần nhất',    type:'text',   req:true},
+    {label:'Số năm kinh nghiệm',      type:'number', req:true},
+    {label:'Lương kỳ vọng (VNĐ/th)', type:'text',   req:true},
+    {label:'Có thể bắt đầu khi nào', type:'date',   req:true},
+  ]},
+  { num:5, title:'Liên quan Pandora', fields:[
+    {label:'Pandora đã liên hệ bạn?',        type:'radio', req:true, options:'Chưa từng\nĐã liên hệ'},
+    {label:'Đang làm nhà thầu tại Pandora?', type:'radio', req:true, options:'Không\nCó'},
+  ]},
+  { num:6, title:'Thông tin ngân hàng', fields:[
+    {label:'Tên ngân hàng',    type:'select', req:true, options:'Agribank\nBIDV\nVietcombank\nTechcombank\n(và nhiều ngân hàng khác)'},
+    {label:'Số tài khoản',     type:'text',   req:true},
+  ]},
+  { num:7, title:'Tài liệu đính kèm', fields:[
+    {label:'Ảnh CCCD – Mặt trước', type:'file', req:true},
+    {label:'Ảnh CCCD – Mặt sau',   type:'file', req:true},
+    {label:'Ảnh số tài khoản',     type:'file', req:true},
+  ]},
+];
+
+function openPreview() {
+  const customVisible = fbFields.filter(f => f.show_in_form);
+  let html = `<div class="preview-wrap">
+  <div class="preview-header">
+    <div class="preview-header-logo">Pandora</div>
+    <div class="preview-header-sub">Employee Personal Information</div>
+  </div>`;
+
+  PREVIEW_SECTIONS.forEach(sec => {
+    html += `<div class="preview-section">
+      <div class="preview-section-head">
+        <span class="preview-section-num">${sec.num}</span>
+        <span class="preview-section-title">${sec.title}</span>
+      </div>
+      <div class="preview-body">${sec.fields.map(f => pvField(f)).join('')}</div>
+    </div>`;
+  });
+
+  if (customVisible.length) {
+    html += `<div class="preview-section">
+      <div class="preview-section-head">
+        <span class="preview-section-num">${PREVIEW_SECTIONS.length + 1}</span>
+        <span class="preview-section-title">Thông tin bổ sung</span>
+      </div>
+      <div class="preview-body">${customVisible.map(f => pvField({
+        label: f.label, type: f.type, req: !!f.required,
+        options: f.options, ph: ''
+      })).join('')}</div>
+    </div>`;
+  }
+
+  html += `<div class="preview-consent">☑ Tôi đã đọc và đồng ý với điều khoản xử lý dữ liệu cá nhân</div>
+  <button class="preview-submit" disabled>Gửi đăng ký</button>
+  </div>`;
+
+  document.getElementById('m-preview-body').innerHTML = html;
+  document.getElementById('m-preview').classList.add('open');
+}
+
+function pvField(f) {
+  const req = f.req ? ' <span style="color:var(--rose)">*</span>' : '';
+  let input = '';
+  if (f.type === 'radio') {
+    const opts = (f.options || '').split('\n').filter(Boolean);
+    input = `<div class="preview-pill-group">${opts.map(o => `<div class="preview-pill">${o}</div>`).join('')}</div>`;
+  } else if (f.type === 'select') {
+    input = `<div class="preview-input-mock">— Chọn —</div>`;
+  } else if (f.type === 'file') {
+    input = `<div class="preview-file-mock">📎 Chọn ảnh hoặc kéo thả vào đây</div>`;
+  } else if (f.type === 'textarea') {
+    input = `<div class="preview-input-mock preview-textarea-mock"></div>`;
+  } else {
+    input = `<div class="preview-input-mock">${f.ph || ''}</div>`;
+  }
+  return `<div><div class="preview-field-label">${f.label}${req}</div>${input}</div>`;
 }
 </script>
 </body>
