@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pandora – Quản lý ứng tuyển</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --rose:        #c4687a;
+    --rose-dark:   #9e4f5f;
+    --rose-mid:    #d4879a;
+    --rose-light:  #f5dde1;
+    --rose-pale:   #fdf8f8;
+    --charcoal:    #1c1c1c;
+    --sidebar-bg:  #1e1418;
+    --sidebar-act: #2e1e24;
+    --text:        #2c2c2c;
+    --muted:       #8a8a8a;
+    --border:      #ead5d8;
+    --white:       #ffffff;
+    --bg:          #f7f2f3;
+    --danger:      #b5565a;
+    --success:     #5a8a6a;
+    --shadow:      0 2px 16px rgba(196,104,122,0.12);
+    --shadow-lg:   0 8px 40px rgba(0,0,0,0.18);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; }
+
+  /* ══════════════════════════════
+     LOGIN
+  ══════════════════════════════ */
+  #login-wrap {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, var(--sidebar-bg) 0%, #3a1e28 100%);
+  }
+  .login-card {
+    background: var(--white);
+    border-radius: 14px;
+    width: 100%; max-width: 360px;
+    padding: 42px 36px 36px;
+    box-shadow: var(--shadow-lg);
+    text-align: center;
+  }
+  .login-brand {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.7rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--charcoal);
+    text-transform: uppercase;
+  }
+  .login-divider { width: 32px; height: 1px; background: var(--rose); margin: 10px auto 6px; }
+  .login-sub { font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 28px; }
+  .lfield { text-align: left; margin-bottom: 14px; }
+  .lfield label { display: block; font-size: 0.72rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 6px; }
+  .lfield input {
+    width: 100%; border: 1px solid var(--border); border-radius: 6px;
+    padding: 10px 14px; font-size: 0.88rem; font-family: inherit; color: var(--text);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .lfield input:focus { outline: none; border-color: var(--rose); box-shadow: 0 0 0 3px rgba(196,104,122,0.12); }
+  .lfield input.bad { border-color: var(--danger); }
+  .lerr { color: var(--danger); font-size: 0.75rem; margin: 8px 0 4px; display: none; }
+  .lerr.on { display: block; }
+  .lbtn {
+    width: 100%; background: var(--rose); color: #fff; border: none;
+    border-radius: 50px; padding: 12px; font-size: 0.82rem; font-weight: 500;
+    font-family: inherit; letter-spacing: 0.15em; text-transform: uppercase;
+    cursor: pointer; transition: background 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 14px rgba(196,104,122,0.30); margin-top: 4px;
+  }
+  .lbtn:hover { background: var(--rose-dark); }
+  .lnote { font-size: 0.68rem; color: #ccc; margin-top: 16px; }
+
+  /* ══════════════════════════════
+     DASHBOARD LAYOUT
+  ══════════════════════════════ */
+  #dash { display: none; }
+  .layout { display: flex; min-height: 100vh; }
+
+  /* Sidebar */
+  .sidebar {
+    width: 210px; background: var(--sidebar-bg); color: #fff;
+    display: flex; flex-direction: column;
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 100;
+  }
+  .sb-brand {
+    padding: 22px 18px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+  .sb-brand-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.15rem; font-weight: 700;
+    letter-spacing: 0.2em; color: #fff;
+    text-transform: uppercase;
+  }
+  .sb-brand-sub { font-size: 0.65rem; letter-spacing: 0.12em; color: rgba(255,255,255,0.35); margin-top: 2px; text-transform: uppercase; }
+  .sb-rose-line { width: 24px; height: 1px; background: var(--rose-mid); margin-top: 8px; }
+
+  .sb-nav { padding: 12px 0; flex: 1; }
+  .sb-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 18px; font-size: 0.82rem; cursor: pointer;
+    color: rgba(255,255,255,0.5);
+    border-left: 2px solid transparent;
+    transition: all 0.18s; letter-spacing: 0.02em;
+  }
+  .sb-item:hover { color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.04); }
+  .sb-item.on { color: #fff; border-left-color: var(--rose-mid); background: var(--sidebar-act); }
+  .sb-icon { font-size: 0.95rem; width: 18px; text-align: center; }
+
+  .sb-footer { padding: 14px 18px; border-top: 1px solid rgba(255,255,255,0.06); }
+  .sb-logout {
+    display: flex; align-items: center; gap: 8px;
+    color: rgba(255,255,255,0.35); font-size: 0.78rem; cursor: pointer;
+    transition: color 0.18s; padding: 4px 0;
+  }
+  .sb-logout:hover { color: var(--rose-mid); }
+
+  /* Main */
+  .main { margin-left: 210px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* Topbar */
+  .topbar {
+    background: var(--white); border-bottom: 1px solid var(--border);
+    padding: 14px 28px; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 50;
+    box-shadow: 0 1px 0 var(--border);
+  }
+  .topbar-title { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; font-weight: 600; color: var(--charcoal); letter-spacing: 0.04em; }
+  .topbar-right { display: flex; align-items: center; gap: 14px; }
+  .topbar-user { font-size: 0.78rem; color: var(--muted); }
+  .topbar-user strong { color: var(--rose-dark); }
+  .count-pill { background: var(--rose-light); color: var(--rose-dark); border-radius: 20px; padding: 3px 12px; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em; }
+
+  /* Content */
+  .content { padding: 24px 28px; flex: 1; }
+
+  /* ── Stat cards ── */
+  .stat-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 24px; }
+  .stat-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px 20px;
+    box-shadow: var(--shadow); display: flex; align-items: center; gap: 14px;
+  }
+  .stat-icon-wrap {
+    width: 42px; height: 42px; border-radius: 10px;
+    background: var(--rose-light); display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; flex-shrink: 0;
+  }
+  .stat-num { font-size: 1.5rem; font-weight: 600; color: var(--charcoal); line-height: 1; font-family: 'Cormorant Garamond', serif; }
+  .stat-lbl { font-size: 0.72rem; color: var(--muted); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* ── Section card ── */
+  .sc { background: var(--white); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); }
+  .sc-head {
+    padding: 14px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+  }
+  .sc-title { font-size: 0.85rem; font-weight: 600; color: var(--charcoal); letter-spacing: 0.03em; }
+
+  /* Toolbar */
+  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .search-box {
+    border: 1px solid var(--border); border-radius: 50px;
+    padding: 7px 16px 7px 36px; font-size: 0.82rem; font-family: inherit;
+    min-width: 210px; transition: border-color 0.2s, box-shadow 0.2s;
+    background: var(--rose-pale) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23c4687a' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") no-repeat 12px center;
+    color: var(--text);
+  }
+  .search-box:focus { outline: none; border-color: var(--rose); box-shadow: 0 0 0 3px rgba(196,104,122,0.10); background-color: #fff; }
+
+  /* Buttons */
+  .btn {
+    border: none; border-radius: 50px; padding: 8px 18px;
+    font-size: 0.78rem; font-weight: 500; font-family: inherit; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+    letter-spacing: 0.06em; text-transform: uppercase; transition: all 0.18s;
+  }
+  .btn-rose { background: var(--rose); color: #fff; box-shadow: 0 2px 10px rgba(196,104,122,0.25); }
+  .btn-rose:hover { background: var(--rose-dark); }
+  .btn-outline { background: transparent; color: var(--rose); border: 1.5px solid var(--rose); }
+  .btn-outline:hover { background: var(--rose-light); }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--danger); color: var(--danger); }
+  .btn-sm { padding: 5px 14px; font-size: 0.72rem; }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-danger:hover { background: #8b3a3e; }
+
+  /* Filter bar */
+  .filter-bar {
+    padding: 10px 20px; background: #fffafa;
+    border-bottom: 1px solid var(--border);
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+  }
+  .fsel {
+    border: 1px solid var(--border); border-radius: 50px;
+    padding: 6px 28px 6px 12px; font-size: 0.78rem; font-family: inherit;
+    color: var(--text); background: var(--white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23c4687a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 10px center;
+    appearance: none; cursor: pointer; transition: border-color 0.18s;
+  }
+  .fsel:focus { outline: none; border-color: var(--rose); }
+
+  /* ── Table ── */
+  .tbl-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  thead { position: sticky; top: 0; z-index: 2; }
+  th {
+    padding: 10px 14px; text-align: left;
+    font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--rose-dark); background: var(--rose-pale);
+    border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  td { padding: 11px 14px; border-bottom: 1px solid #f2eaec; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fffafa; }
+  .td-name { font-weight: 600; color: var(--charcoal); }
+  .td-sub { font-size: 0.73rem; color: var(--muted); margin-top: 1px; }
+  .tag {
+    display: inline-block; padding: 2px 10px; border-radius: 50px;
+    font-size: 0.7rem; font-weight: 500; white-space: nowrap;
+  }
+  .tag-yes { background: #edf5ed; color: #2d6e3a; }
+  .tag-no  { background: #fceef0; color: #8b3a3e; }
+  .tag-edu { background: var(--rose-light); color: var(--rose-dark); }
+  .tag-warn { background: #fff3e0; color: #7a4400; }
+  .no-data { text-align: center; padding: 56px; color: var(--muted); font-size: 0.88rem; }
+  .no-data-icon { font-size: 2.5rem; margin-bottom: 10px; }
+
+  /* ── Modals ── */
+  .overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(28,12,18,0.55); z-index: 200;
+    align-items: flex-start; justify-content: center;
+    padding: 40px 16px; overflow-y: auto; backdrop-filter: blur(2px);
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    background: var(--white); border-radius: 12px; width: 100%; max-width: 680px;
+    margin: auto; box-shadow: var(--shadow-lg);
+    animation: mIn 0.22s ease;
+  }
+  @keyframes mIn { from { opacity:0; transform: translateY(-16px); } to { opacity:1; transform: none; } }
+  .modal-head {
+    padding: 18px 24px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-head-title { font-family: 'Cormorant Garamond', serif; font-size: 1.05rem; font-weight: 600; color: var(--charcoal); }
+  .modal-close { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--muted); line-height: 1; padding: 4px; transition: color 0.18s; }
+  .modal-close:hover { color: var(--danger); }
+  .modal-body { padding: 22px 24px; }
+  .modal-foot { padding: 14px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
+
+  /* Detail grid */
+  .dg { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .dg-section {
+    grid-column: 1/-1;
+    font-size: 0.68rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.12em; color: var(--rose);
+    padding: 8px 0 4px; border-bottom: 1px solid var(--rose-light);
+    margin-top: 6px;
+  }
+  .dg-field label { font-size: 0.68rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); display: block; }
+  .dg-field .val { font-size: 0.86rem; color: var(--text); margin-top: 3px; word-break: break-word; }
+  .dg-field .val strong { color: var(--charcoal); }
+  .ref-chip { background: var(--rose-light); color: var(--rose-dark); padding: 2px 10px; border-radius: 50px; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em; display: inline-block; }
+
+  .photo-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 18px; }
+  .photo-col { text-align: center; }
+  .photo-col label { font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); display: block; margin-bottom: 8px; }
+  .photo-col img { width: 100%; max-height: 190px; object-fit: contain; border-radius: 8px; border: 1px solid var(--border); background: var(--rose-pale); }
+  .photo-none { height: 100px; border: 1px dashed var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 0.78rem; background: #fafafa; }
+
+  /* Confirm modal */
+  .confirm-text { font-size: 0.88rem; line-height: 1.7; color: var(--text); padding: 4px 0 12px; }
+
+  /* Stats tab */
+  .stats-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+  .stats-table tr { border-bottom: 1px solid var(--border); }
+  .stats-table tr:last-child { border-bottom: none; }
+  .stats-table td { padding: 12px 16px; }
+  .stats-table td:first-child { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; width: 200px; }
+  .stats-table td:last-child { font-weight: 500; color: var(--charcoal); }
+  .stat-bar-wrap { height: 5px; background: var(--rose-light); border-radius: 3px; margin-top: 5px; overflow: hidden; }
+  .stat-bar { height: 100%; background: var(--rose); border-radius: 3px; transition: width 0.4s; }
+
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .stat-row { grid-template-columns: 1fr 1fr; }
+    .dg { grid-template-columns: 1fr; }
+    .photo-row { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 520px) {
+    .stat-row { grid-template-columns: 1fr; }
+    .content { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════ LOGIN ══════════ -->
+<div id="login-wrap">
+  <div class="login-card">
+    <div class="login-brand">Pandora</div>
+    <div class="login-divider"></div>
+    <div class="login-sub">Quản lý nhân sự</div>
+    <div class="lfield">
+      <label>Tên đăng nhập</label>
+      <input type="text" id="lu" placeholder="admin" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('lp').focus()">
+    </div>
+    <div class="lfield">
+      <label>Mật khẩu</label>
+      <input type="password" id="lp" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="lerr" id="lerr">Tên đăng nhập hoặc mật khẩu không đúng.</div>
+    <button class="lbtn" onclick="doLogin()">Đăng nhập</button>
+    <div class="lnote">Mọi hoạt động truy cập đều được ghi nhận</div>
+  </div>
+</div>
+
+<!-- ══════════ DASHBOARD ══════════ -->
+<div id="dash">
+<div class="layout">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-brand-name">Pandora</div>
+      <div class="sb-brand-sub">HR Management</div>
+      <div class="sb-rose-line"></div>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-item on" data-tab="tab-list" onclick="switchTab(this,'tab-list','Danh sách ứng viên')">
+        <span class="sb-icon">📋</span> Danh sách
+      </div>
+      <div class="sb-item" data-tab="tab-stats" onclick="switchTab(this,'tab-stats','Thống kê')">
+        <span class="sb-icon">📊</span> Thống kê
+      </div>
+    </nav>
+    <div class="sb-footer">
+      <div class="sb-logout" onclick="doLogout()">
+        <span>→</span> Đăng xuất
+      </div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topbar-title">Danh sách ứng viên</div>
+      <div class="topbar-right">
+        <span class="topbar-user">Xin chào, <strong id="uname"></strong></span>
+        <span class="count-pill" id="total-pill">0 hồ sơ</span>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ── TAB: LIST ── -->
+      <div id="tab-list">
+        <div class="stat-row">
+          <div class="stat-card">
+            <div class="stat-icon-wrap">👥</div>
+            <div><div class="stat-num" id="s0">0</div><div class="stat-lbl">Tổng hồ sơ</div></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon-wrap">📅</div>
+            <div><div class="stat-num" id="s1">0</div><div class="stat-lbl">Hôm nay</div></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon-wrap">🎓</div>
+            <div><div class="stat-num" id="s2">0</div><div class="stat-lbl">Đại học trở lên</div></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon-wrap">💍</div>
+            <div><div class="stat-num" id="s3">0</div><div class="stat-lbl">Đã qua Pandora</div></div>
+          </div>
+        </div>
+
+        <div class="sc">
+          <div class="sc-head">
+            <div class="sc-title">Hồ sơ ứng tuyển</div>
+            <div class="toolbar">
+              <input class="search-box" type="text" id="q" placeholder="Tìm tên, SĐT, email…" oninput="render()">
+              <button class="btn btn-outline btn-sm" onclick="exportXLSX()">⬇ Xuất Excel</button>
+              <button class="btn btn-ghost btn-sm" id="del-all-btn" onclick="confirmDelAll()" style="display:none;">🗑 Xóa tất cả</button>
+            </div>
+          </div>
+          <div class="filter-bar">
+            <select class="fsel" id="fg" onchange="render()">
+              <option value="">Tất cả giới tính</option>
+              <option>Nam</option><option>Nữ</option><option>Khác</option>
+            </select>
+            <select class="fsel" id="fe" onchange="render()">
+              <option value="">Tất cả học vấn</option>
+              <option>Cấp 2</option><option>Cấp 3</option><option>Trung cấp</option>
+              <option>Cao đẳng</option><option>Đại học</option><option>Khác</option>
+            </select>
+            <select class="fsel" id="fp" onchange="render()">
+              <option value="">Tất cả – Pandora</option>
+              <option value="Đã liên hệ">Đã được liên hệ</option>
+              <option value="Chưa từng">Chưa từng</option>
+            </select>
+            <select class="fsel" id="fc" onchange="render()">
+              <option value="">Nhà thầu – tất cả</option>
+              <option value="Có">Đang ở Pandora</option>
+              <option value="Không">Không</option>
+            </select>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Ứng viên</th>
+                  <th>Liên hệ</th>
+                  <th>Tuổi / GT</th>
+                  <th>Học vấn</th>
+                  <th>Kinh nghiệm</th>
+                  <th>Lương KV</th>
+                  <th>Sức khoẻ</th>
+                  <th>Pandora</th>
+                  <th>Ngày gửi</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── TAB: STATS ── -->
+      <div id="tab-stats" style="display:none;">
+        <div class="sc">
+          <div class="sc-head"><div class="sc-title">Thống kê tổng quan</div></div>
+          <div style="padding:20px;" id="stats-body"><em style="color:var(--muted)">Đang tải…</em></div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div>
+</div><!-- /dash -->
+
+<!-- Modal: Chi tiết -->
+<div class="overlay" id="m-detail">
+  <div class="modal" style="max-width:700px;">
+    <div class="modal-head">
+      <div class="modal-head-title" id="m-title">Chi tiết hồ sơ</div>
+      <button class="modal-close" onclick="closeM('m-detail')">✕</button>
+    </div>
+    <div class="modal-body" id="m-body"></div>
+    <div class="modal-foot">
+      <button class="btn btn-danger btn-sm" id="m-del-btn">Xóa hồ sơ này</button>
+      <button class="btn btn-outline btn-sm" onclick="closeM('m-detail')">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Xác nhận -->
+<div class="overlay" id="m-confirm">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-head">
+      <div class="modal-head-title">Xác nhận xóa</div>
+      <button class="modal-close" onclick="closeM('m-confirm')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="confirm-text" id="confirm-txt"></p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost btn-sm" onclick="closeM('m-confirm')">Hủy</button>
+      <button class="btn btn-danger btn-sm" id="confirm-ok">Xác nhận xóa</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Auth ──────────────────────────────────────────────
+const CREDS = { admin: 'Pandora@2025' };
+let me = null;
+
+function doLogin() {
+  const u = document.getElementById('lu').value.trim();
+  const p = document.getElementById('lp').value;
+  if (CREDS[u] && CREDS[u] === p) {
+    me = u;
+    document.getElementById('login-wrap').style.display = 'none';
+    document.getElementById('dash').style.display = 'block';
+    document.getElementById('uname').textContent = u;
+    load();
+  } else {
+    document.getElementById('lerr').classList.add('on');
+    document.getElementById('lp').classList.add('bad');
+    document.getElementById('lp').value = '';
+    document.getElementById('lp').focus();
+  }
+}
+function doLogout() {
+  if (!confirm('Đăng xuất?')) return;
+  me = null;
+  document.getElementById('dash').style.display = 'none';
+  document.getElementById('login-wrap').style.display = 'flex';
+  document.getElementById('lp').value = '';
+  document.getElementById('lerr').classList.remove('on');
+}
+
+// ── Data ──────────────────────────────────────────────
+const getData = () => { try { return JSON.parse(localStorage.getItem('pandora_submissions')||'[]'); } catch { return []; } };
+const setData = d => localStorage.setItem('pandora_submissions', JSON.stringify(d));
+
+// ── Tabs ─────────────────────────────────────────────
+function switchTab(el, tabId, title) {
+  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('on'));
+  el.classList.add('on');
+  ['tab-list','tab-stats'].forEach(t => document.getElementById(t).style.display = 'none');
+  document.getElementById(tabId).style.display = 'block';
+  document.getElementById('topbar-title').textContent = title;
+  if (tabId === 'tab-stats') renderStats();
+}
+
+// ── Load ──────────────────────────────────────────────
+function load() { render(); updateMini(); }
+
+function updateMini() {
+  const d = getData();
+  const today = new Date().toDateString();
+  document.getElementById('s0').textContent = d.length;
+  document.getElementById('s1').textContent = d.filter(x => new Date(x.timestamp).toDateString()===today).length;
+  document.getElementById('s2').textContent = d.filter(x => x.education==='Đại học').length;
+  document.getElementById('s3').textContent = d.filter(x => x.pandoraContact==='Đã liên hệ').length;
+  document.getElementById('total-pill').textContent = d.length + ' hồ sơ';
+  document.getElementById('del-all-btn').style.display = d.length ? 'inline-flex' : 'none';
+}
+
+// ── Table ─────────────────────────────────────────────
+function render() {
+  const q  = (document.getElementById('q').value||'').toLowerCase();
+  const fg = document.getElementById('fg').value;
+  const fe = document.getElementById('fe').value;
+  const fp = document.getElementById('fp').value;
+  const fc = document.getElementById('fc').value;
+
+  let rows = getData().filter(d => {
+    const mq = !q || [d.fullname,d.phone,d.email,d.cccd].some(v=>(v||'').toLowerCase().includes(q));
+    return mq
+      && (!fg || d.gender===fg)
+      && (!fe || d.education===fe)
+      && (!fp || d.pandoraContact===fp)
+      && (!fc || d.pandoraContractor===fc);
+  }).sort((a,b) => new Date(b.timestamp)-new Date(a.timestamp));
+
+  const tbody = document.getElementById('tbody');
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="11" class="no-data"><div class="no-data-icon">🌸</div>Không tìm thấy hồ sơ phù hợp</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map((d,i) => `
+    <tr>
+      <td style="color:var(--muted);font-size:0.72rem;">${i+1}</td>
+      <td>
+        <div class="td-name">${x(d.fullname)}</div>
+        <div class="td-sub">${x(d.email)}</div>
+      </td>
+      <td><div>${x(d.phone)}</div></td>
+      <td>${d.age} / ${x(d.gender)}</td>
+      <td><span class="tag tag-edu">${x(d.education)}</span></td>
+      <td>
+        <div>${d.experience} năm</div>
+        <div class="td-sub">${x(d.company)}</div>
+      </td>
+      <td style="white-space:nowrap;">${x(d.salary)}</td>
+      <td>
+        ${htag(d.runTay,'Run tay')}
+        ${htag(d.can,'Cận')}
+        ${htag(d.moHoiTay,'Mồ hôi')}
+      </td>
+      <td>
+        ${d.pandoraContact==='Đã liên hệ'
+          ? `<span class="tag tag-yes">Đã liên hệ</span>`
+          : `<span class="tag tag-no">Chưa</span>`}
+        ${d.pandoraContractor==='Có'
+          ? `<br><span class="tag tag-warn" style="margin-top:4px;">Nhà thầu</span>` : ''}
+      </td>
+      <td class="td-sub" style="white-space:nowrap;">${fmtDate(d.timestamp)}</td>
+      <td>
+        <button class="btn btn-rose btn-sm" onclick="openDetail('${d.id}')">Xem</button>
+      </td>
+    </tr>`).join('');
+}
+
+function htag(v, lbl) {
+  if (!v || v==='N/A') return '';
+  const yes = v==='Có';
+  return `<span class="tag ${yes?'tag-no':'tag-yes'}" style="margin:1px 0;display:inline-block;">${yes?'⚠ '+lbl:'✓ Không '+lbl}</span><br>`;
+}
+
+function x(s) {
+  if (!s) return '—';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmtDate(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString('vi-VN') + ' ' + d.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ── Detail modal ──────────────────────────────────────
+function openDetail(id) {
+  const d = getData().find(r => r.id===id);
+  if (!d) return;
+  document.getElementById('m-title').textContent = d.fullname;
+  document.getElementById('m-body').innerHTML = `
+    <div class="dg">
+      <div class="dg-section">Thông tin cá nhân</div>
+      ${df('Mã hồ sơ', `<span class="ref-chip">${d.id}</span>`)}
+      ${df('Họ và tên', `<strong>${x(d.fullname)}</strong>`)}
+      ${df('Điện thoại', x(d.phone))}
+      ${df('Email', x(d.email))}
+      ${df('Tuổi', d.age + ' tuổi')}
+      ${df('Giới tính', x(d.gender))}
+      ${df('Nơi ở', x(d.address), true)}
+
+      <div class="dg-section">Căn cước công dân</div>
+      ${df('Số CCCD', `<strong>${x(d.cccd)}</strong>`)}
+      ${df('Ngày cấp', x(d.cccdDate))}
+      ${df('Nơi cấp', x(d.cccdPlace), true)}
+
+      <div class="dg-section">Sức khoẻ</div>
+      ${df('Run tay', badge(d.runTay))}
+      ${df('Cận thị', badge(d.can))}
+      ${df('Mồ hôi tay', badge(d.moHoiTay))}
+
+      <div class="dg-section">Học vấn & Kinh nghiệm</div>
+      ${df('Học vấn', `<span class="tag tag-edu">${x(d.education)}</span>`)}
+      ${df('Công ty gần nhất', x(d.company))}
+      ${df('Năm kinh nghiệm', d.experience + ' năm')}
+      ${df('Lương kỳ vọng', x(d.salary))}
+      ${df('Ngày bắt đầu', x(d.startDate))}
+
+      <div class="dg-section">Pandora</div>
+      ${df('Đã liên hệ', x(d.pandoraContact))}
+      ${df('Đã phỏng vấn', x(d.pandoraInterview))}
+      ${df('Nhà thầu Pandora', x(d.pandoraContractor))}
+
+      <div class="dg-section">Ngân hàng</div>
+      ${df('Số tài khoản', `<strong>${x(d.bankAccount)}</strong>`)}
+      ${df('Ngày gửi hồ sơ', fmtDate(d.timestamp))}
+    </div>
+    <div class="photo-row">
+      <div class="photo-col">
+        <label>Ảnh CCCD</label>
+        ${d.cccdPhoto ? `<img src="${d.cccdPhoto}" alt="CCCD">` : '<div class="photo-none">Không có ảnh</div>'}
+      </div>
+      <div class="photo-col">
+        <label>Ảnh Số tài khoản</label>
+        ${d.bankPhoto ? `<img src="${d.bankPhoto}" alt="Bank">` : '<div class="photo-none">Không có ảnh</div>'}
+      </div>
+    </div>`;
+  document.getElementById('m-del-btn').onclick = () => confirmDel(id);
+  document.getElementById('m-detail').classList.add('open');
+}
+
+function df(label, val, full) {
+  return `<div class="dg-field${full?' dg-full':''}"><label>${label}</label><div class="val">${val||'—'}</div></div>`;
+}
+function badge(v) {
+  if (!v) return '—';
+  return v==='Có'
+    ? `<span class="tag tag-no">✕ Có</span>`
+    : `<span class="tag tag-yes">✓ Không</span>`;
+}
+
+// ── Delete ────────────────────────────────────────────
+function confirmDel(id) {
+  const d = getData().find(r=>r.id===id);
+  if (!d) return;
+  document.getElementById('confirm-txt').textContent = `Xóa hồ sơ của "${d.fullname}"? Thao tác này không thể hoàn tác.`;
+  document.getElementById('confirm-ok').onclick = () => {
+    setData(getData().filter(r=>r.id!==id));
+    closeM('m-confirm'); closeM('m-detail');
+    render(); updateMini();
+  };
+  document.getElementById('m-confirm').classList.add('open');
+}
+function confirmDelAll() {
+  document.getElementById('confirm-txt').textContent = 'Xóa TẤT CẢ hồ sơ? Thao tác này KHÔNG THỂ hoàn tác!';
+  document.getElementById('confirm-ok').onclick = () => {
+    setData([]);
+    closeM('m-confirm'); render(); updateMini();
+  };
+  document.getElementById('m-confirm').classList.add('open');
+}
+function closeM(id) { document.getElementById(id).classList.remove('open'); }
+
+// ── Export XLSX ───────────────────────────────────────
+function exportXLSX() {
+  const data = getData();
+  if (!data.length) { alert('Chưa có dữ liệu để xuất.'); return; }
+
+  const headers = [
+    'Mã hồ sơ','Họ và tên','Điện thoại','Email','Tuổi','Giới tính','Nơi ở',
+    'Số CCCD','Ngày cấp CCCD','Nơi cấp CCCD',
+    'Run tay','Cận thị','Mồ hôi tay',
+    'Học vấn','Công ty gần nhất','Năm kinh nghiệm','Lương kỳ vọng','Ngày bắt đầu',
+    'Pandora đã liên hệ','Đã phỏng vấn','Nhà thầu Pandora',
+    'Số TK ngân hàng','Ngày gửi hồ sơ'
+  ];
+
+  const rows = data.map(d => [
+    d.id, d.fullname, d.phone, d.email, Number(d.age), d.gender, d.address,
+    d.cccd, d.cccdDate, d.cccdPlace,
+    d.runTay, d.can, d.moHoiTay,
+    d.education, d.company, Number(d.experience), d.salary, d.startDate,
+    d.pandoraContact, d.pandoraInterview, d.pandoraContractor,
+    d.bankAccount, fmtDate(d.timestamp)
+  ]);
+
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+
+  // Column widths
+  ws['!cols'] = [
+    {wch:18},{wch:22},{wch:14},{wch:26},{wch:6},{wch:8},{wch:30},
+    {wch:14},{wch:12},{wch:30},
+    {wch:8},{wch:8},{wch:10},
+    {wch:10},{wch:24},{wch:8},{wch:14},{wch:12},
+    {wch:16},{wch:14},{wch:16},
+    {wch:16},{wch:20}
+  ];
+
+  // Style header row (bold + fill) — requires xlsxjs-style variant; basic xlsx only supports limited styling
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  for (let C = range.s.c; C <= range.e.c; C++) {
+    const cell = ws[XLSX.utils.encode_cell({r:0,c:C})];
+    if (cell) {
+      cell.s = {
+        font: { bold: true, color: { rgb: '9E4F5F' } },
+        fill: { fgColor: { rgb: 'F5DDE1' } },
+        alignment: { horizontal: 'center', wrapText: true }
+      };
+    }
+  }
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Ứng tuyển');
+
+  const date = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, `Pandora_UngTuyen_${date}.xlsx`);
+}
+
+// ── Stats tab ─────────────────────────────────────────
+function renderStats() {
+  const d = getData();
+  if (!d.length) { document.getElementById('stats-body').innerHTML='<em style="color:var(--muted)">Chưa có dữ liệu.</em>'; return; }
+
+  const n = d.length;
+  const cnt = (key,val) => d.filter(r=>r[key]===val).length;
+  const pct = v => Math.round(v/n*100);
+  const avgAge = (d.reduce((s,r)=>s+Number(r.age||0),0)/n).toFixed(1);
+  const avgExp = (d.reduce((s,r)=>s+Number(r.experience||0),0)/n).toFixed(1);
+
+  const bar = v => `<div class="stat-bar-wrap"><div class="stat-bar" style="width:${pct(v)}%"></div></div>`;
+
+  const edu = ['Cấp 2','Cấp 3','Trung cấp','Cao đẳng','Đại học','Khác']
+    .map(e=>`${e}: ${cnt('education',e)} (${pct(cnt('education',e))}%)`).join('  ·  ');
+
+  document.getElementById('stats-body').innerHTML = `
+    <table class="stats-table">
+      <tr><td>Tổng hồ sơ</td><td><strong style="font-size:1.3rem;font-family:'Cormorant Garamond',serif;">${n}</strong></td></tr>
+      <tr><td>Tuổi trung bình</td><td>${avgAge} tuổi</td></tr>
+      <tr><td>Kinh nghiệm TB</td><td>${avgExp} năm</td></tr>
+      <tr>
+        <td>Nam / Nữ / Khác</td>
+        <td>${cnt('gender','Nam')} / ${cnt('gender','Nữ')} / ${cnt('gender','Khác')}
+          ${bar(cnt('gender','Nữ'))}
+        </td>
+      </tr>
+      <tr><td>Trình độ học vấn</td><td style="font-size:0.78rem;">${edu}</td></tr>
+      <tr>
+        <td>Run tay – Có</td>
+        <td>${cnt('runTay','Có')} / ${n} (${pct(cnt('runTay','Có'))}%)
+          ${bar(cnt('runTay','Có'))}
+        </td>
+      </tr>
+      <tr>
+        <td>Cận thị – Có</td>
+        <td>${cnt('can','Có')} / ${n} (${pct(cnt('can','Có'))}%)
+          ${bar(cnt('can','Có'))}
+        </td>
+      </tr>
+      <tr>
+        <td>Mồ hôi tay – Có</td>
+        <td>${cnt('moHoiTay','Có')} / ${n} (${pct(cnt('moHoiTay','Có'))}%)
+          ${bar(cnt('moHoiTay','Có'))}
+        </td>
+      </tr>
+      <tr>
+        <td>Đã được Pandora liên hệ</td>
+        <td>${cnt('pandoraContact','Đã liên hệ')} / ${n} (${pct(cnt('pandoraContact','Đã liên hệ'))}%)
+          ${bar(cnt('pandoraContact','Đã liên hệ'))}
+        </td>
+      </tr>
+      <tr>
+        <td>Đang làm nhà thầu</td>
+        <td>${cnt('pandoraContractor','Có')} / ${n}
+          ${bar(cnt('pandoraContractor','Có'))}
+        </td>
+      </tr>
+    </table>`;
+}
+
+// Overlay click-outside
+document.querySelectorAll('.overlay').forEach(o => o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); }));
+</script>
+</body>
+</html>

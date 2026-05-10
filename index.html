@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pandora – Employee Personal Information</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --rose:       #c4687a;
+    --rose-dark:  #9e4f5f;
+    --rose-mid:   #d4879a;
+    --rose-light: #f5dde1;
+    --rose-pale:  #fdf8f8;
+    --charcoal:   #1c1c1c;
+    --text:       #2c2c2c;
+    --muted:      #8a8a8a;
+    --border:     #e8d0d4;
+    --border-focus: #c4687a;
+    --white:      #ffffff;
+    --danger:     #b5565a;
+    --success:    #5a8a6a;
+    --shadow-sm:  0 1px 4px rgba(196,104,122,0.10);
+    --shadow:     0 4px 20px rgba(196,104,122,0.14);
+    --shadow-lg:  0 8px 40px rgba(196,104,122,0.18);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: var(--rose-pale);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* ── Header ── */
+  .brand-header {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 0 0;
+    text-align: center;
+  }
+  .brand-logo {
+    letter-spacing: 0.35em;
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 700;
+    font-size: 1.6rem;
+    color: var(--charcoal);
+    text-transform: uppercase;
+  }
+  .brand-divider {
+    width: 40px; height: 1px;
+    background: var(--rose);
+    margin: 10px auto 8px;
+  }
+  .brand-subtitle {
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-bottom: 18px;
+  }
+  .brand-progress {
+    height: 3px;
+    background: var(--rose-light);
+  }
+  .brand-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--rose-mid), var(--rose));
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  /* ── Container ── */
+  .container {
+    max-width: 660px;
+    margin: 0 auto;
+    padding: 32px 16px 80px;
+  }
+
+  /* ── Privacy notice ── */
+  .notice {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--rose-mid);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+  .notice strong { color: var(--rose-dark); }
+
+  /* ── Section card ── */
+  .section {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+  .section-head {
+    padding: 14px 22px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--rose-light);
+    background: linear-gradient(135deg, #fffafa 0%, #fdf0f2 100%);
+  }
+  .section-num {
+    width: 26px; height: 26px;
+    background: var(--rose);
+    color: #fff;
+    border-radius: 50%;
+    font-size: 0.72rem;
+    font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--charcoal);
+    letter-spacing: 0.03em;
+  }
+  .section-body { padding: 22px; }
+
+  /* ── Fields ── */
+  .field { margin-bottom: 20px; }
+  .field:last-child { margin-bottom: 0; }
+
+  label.field-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 7px;
+  }
+  .req { color: var(--rose); margin-left: 3px; }
+  .hint { font-weight: 400; text-transform: none; letter-spacing: 0; font-size: 0.75rem; margin-left: 6px; color: #bbb; }
+
+  input[type="text"],
+  input[type="tel"],
+  input[type="email"],
+  input[type="number"],
+  input[type="date"],
+  select,
+  textarea {
+    width: 100%;
+    border: 1px solid var(--border);
+    background: var(--white);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 0.9rem;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px rgba(196,104,122,0.12);
+  }
+  input.err, select.err, textarea.err {
+    border-color: var(--danger);
+    box-shadow: 0 0 0 3px rgba(181,86,90,0.1);
+  }
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23c4687a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+    cursor: pointer;
+  }
+  textarea { resize: vertical; min-height: 76px; }
+
+  .field-err {
+    font-size: 0.75rem;
+    color: var(--danger);
+    margin-top: 5px;
+    display: none;
+    align-items: center;
+    gap: 4px;
+  }
+  .field-err.show { display: flex; }
+  .field-err::before { content: '✕'; font-size: 0.65rem; }
+
+  /* ── Row ── */
+  .row { display: flex; gap: 14px; }
+  .row .field { flex: 1; min-width: 0; }
+
+  /* ── Radio pills ── */
+  .pill-group { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .pill {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 50px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.18s;
+    user-select: none;
+    color: var(--muted);
+  }
+  .pill input { display: none; }
+  .pill:hover { border-color: var(--rose-mid); color: var(--rose-dark); background: var(--rose-pale); }
+  .pill.on {
+    border-color: var(--rose);
+    background: var(--rose-light);
+    color: var(--rose-dark);
+    font-weight: 500;
+  }
+  .pill-dot {
+    width: 13px; height: 13px;
+    border: 1.5px solid currentColor;
+    border-radius: 50%;
+    position: relative;
+    flex-shrink: 0;
+    transition: border-color 0.18s;
+  }
+  .pill.on .pill-dot::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    width: 7px; height: 7px;
+    background: var(--rose);
+    border-radius: 50%;
+  }
+
+  /* ── File upload ── */
+  .upload-wrap {
+    position: relative;
+    border: 1.5px dashed var(--border);
+    border-radius: 8px;
+    padding: 28px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #fffafa;
+  }
+  .upload-wrap:hover, .upload-wrap.over { border-color: var(--rose); background: var(--rose-pale); }
+  .upload-wrap input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+  .upload-icon { font-size: 1.8rem; margin-bottom: 8px; line-height: 1; }
+  .upload-label { font-size: 0.83rem; color: var(--muted); }
+  .upload-label strong { color: var(--rose); }
+  .upload-sub { font-size: 0.72rem; color: #ccc; margin-top: 4px; }
+
+  .preview-box { display: none; position: relative; margin-top: 12px; text-align: center; }
+  .preview-box img {
+    max-width: 100%;
+    max-height: 180px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    object-fit: contain;
+    background: #fafafa;
+  }
+  .preview-remove {
+    position: absolute;
+    top: -10px; right: -6px;
+    background: var(--rose);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 24px; height: 24px;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+
+  /* ── Consent ── */
+  .consent-box {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 22px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-sm);
+  }
+  .consent-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--charcoal);
+    margin-bottom: 12px;
+  }
+  .consent-scroll {
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.8;
+    max-height: 100px;
+    overflow-y: auto;
+    padding: 12px;
+    background: var(--rose-pale);
+    border: 1px solid var(--rose-light);
+    border-radius: 6px;
+    margin-bottom: 16px;
+  }
+  .consent-check-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    cursor: pointer;
+  }
+  .consent-check-box {
+    width: 18px; height: 18px;
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.18s;
+    background: var(--white);
+  }
+  .consent-check-row input { display: none; }
+  .consent-check-row input:checked + .consent-check-box {
+    background: var(--rose);
+    border-color: var(--rose);
+    color: #fff;
+  }
+  .consent-check-row input:checked + .consent-check-box::after { content: '✓'; font-size: 11px; font-weight: 700; color: #fff; }
+  .consent-check-label { font-size: 0.85rem; color: var(--text); line-height: 1.5; }
+
+  /* ── Submit ── */
+  .submit-btn {
+    width: 100%;
+    background: var(--rose);
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    padding: 15px;
+    font-size: 0.88rem;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+    box-shadow: 0 4px 16px rgba(196,104,122,0.30);
+  }
+  .submit-btn:hover {
+    background: var(--rose-dark);
+    box-shadow: 0 6px 24px rgba(196,104,122,0.40);
+  }
+  .submit-btn:active { transform: scale(0.98); }
+  .submit-btn:disabled { background: #d4a5ad; box-shadow: none; cursor: not-allowed; }
+
+  /* ── Success ── */
+  #success-page {
+    display: none;
+    text-align: center;
+    padding: 60px 24px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+  }
+  .success-rose-circle {
+    width: 72px; height: 72px;
+    background: var(--rose-light);
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem;
+  }
+  #success-page h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: var(--charcoal);
+    margin-bottom: 10px;
+  }
+  #success-page p { font-size: 0.88rem; color: var(--muted); line-height: 1.8; }
+  .ref-pill {
+    display: inline-block;
+    margin-top: 18px;
+    background: var(--rose-light);
+    color: var(--rose-dark);
+    border: 1px solid var(--rose-mid);
+    padding: 7px 20px;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+  }
+  .new-form-btn {
+    display: inline-block;
+    margin-top: 22px;
+    border: 1.5px solid var(--rose);
+    color: var(--rose);
+    background: transparent;
+    border-radius: 50px;
+    padding: 10px 28px;
+    font-size: 0.82rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+  }
+  .new-form-btn:hover { background: var(--rose); color: #fff; }
+
+  /* ── Footer ── */
+  .page-footer {
+    text-align: center;
+    font-size: 0.72rem;
+    color: #ccc;
+    margin-top: 32px;
+    letter-spacing: 0.05em;
+  }
+  .page-footer a { color: var(--rose-mid); text-decoration: none; }
+
+  @media (max-width: 520px) {
+    .row { flex-direction: column; gap: 0; }
+    .brand-logo { font-size: 1.3rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="brand-header">
+  <div class="brand-logo">Pandora</div>
+  <div class="brand-divider"></div>
+  <div class="brand-subtitle">Employee Personal Information</div>
+  <div class="brand-progress">
+    <div class="brand-progress-bar" id="prog-bar"></div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Success (hidden) -->
+  <div id="success-page">
+    <div class="success-rose-circle">🌸</div>
+    <h2>Đăng ký thành công</h2>
+    <p>Cảm ơn bạn đã gửi thông tin ứng tuyển.<br>Bộ phận Nhân sự sẽ liên hệ với bạn sớm nhất.</p>
+    <div class="ref-pill" id="ref-code"></div>
+    <br>
+    <button class="new-form-btn" onclick="location.reload()">Gửi thêm đăng ký</button>
+  </div>
+
+  <!-- Form -->
+  <div id="form-wrap">
+
+    <div class="notice">
+      <strong>Xác nhận xử lý dữ liệu cá nhân:</strong> Công ty có quyền sử dụng, xử lý thông tin cá nhân của bạn cho các mục đích liên quan đến quá trình làm việc, chế độ phúc lợi, báo cáo nhân sự, truyền thông doanh nghiệp, hồ sơ nhân sự và các hoạt động pháp lý hợp pháp khác liên quan đến thông tin cá nhân phát sinh trong quá trình hoạt động của Công ty. Dữ liệu được bảo mật theo Nghị định 13/2023/NĐ-CP.
+    </div>
+
+    <form id="main-form" novalidate>
+
+      <!-- 1. Thông tin cá nhân -->
+      <div class="section">
+        <div class="section-head">
+          <div class="section-num">1</div>
+          <div class="section-title">Thông tin cá nhân</div>
+        </div>
+        <div class="section-body">
+
+          <div class="field">
+            <label class="field-label">Họ và tên <span class="req">*</span></label>
+            <input type="text" id="fullname" placeholder="Nguyễn Văn A" maxlength="100">
+            <div class="field-err" id="e-fullname">Vui lòng nhập họ và tên</div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label class="field-label">Số điện thoại <span class="req">*</span></label>
+              <input type="tel" id="phone" placeholder="0912 345 678" maxlength="15">
+              <div class="field-err" id="e-phone">Số điện thoại không hợp lệ</div>
+            </div>
+            <div class="field">
+              <label class="field-label">Email <span class="req">*</span></label>
+              <input type="email" id="email" placeholder="email@example.com">
+              <div class="field-err" id="e-email">Email không hợp lệ</div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label class="field-label">Tuổi <span class="req">*</span></label>
+              <input type="number" id="age" placeholder="25" min="16" max="60">
+              <div class="field-err" id="e-age">Tuổi phải từ 16 – 60</div>
+            </div>
+            <div class="field">
+              <label class="field-label">Giới tính <span class="req">*</span></label>
+              <div class="pill-group">
+                <label class="pill" onclick="pick(this,'gender','Nam')"><span class="pill-dot"></span> Nam<input type="radio" name="gender" value="Nam"></label>
+                <label class="pill" onclick="pick(this,'gender','Nữ')"><span class="pill-dot"></span> Nữ<input type="radio" name="gender" value="Nữ"></label>
+                <label class="pill" onclick="pick(this,'gender','Khác')"><span class="pill-dot"></span> Khác<input type="radio" name="gender" value="Khác"></label>
+              </div>
+              <div class="field-err" id="e-gender">Vui lòng chọn giới tính</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Nơi ở hiện tại <span class="req">*</span> <span class="hint">Phường/Xã, Quận/Huyện, Tỉnh/TP</span></label>
+            <input type="text" id="address" placeholder="Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh" maxlength="200">
+            <div class="field-err" id="e-address">Vui lòng nhập địa chỉ</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 2. CCCD -->
+      <div class="section">
+        <div class="section-head">
+          <div class="section-num">2</div>
+          <div class="section-title">Căn cước công dân</div>
+        </div>
+        <div class="section-body">
+
+          <div class="field">
+            <label class="field-label">Số CCCD <span class="req">*</span></label>
+            <input type="text" id="cccd" placeholder="012345678901" maxlength="12">
+            <div class="field-err" id="e-cccd">Số CCCD phải có 9 – 12 chữ số</div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label class="field-label">Ngày cấp <span class="req">*</span></label>
+              <input type="date" id="cccd-date">
+              <div class="field-err" id="e-cccd-date">Vui lòng chọn ngày cấp</div>
+            </div>
+            <div class="field">
+              <label class="field-label">Nơi cấp <span class="req">*</span></label>
+              <input type="text" id="cccd-place" placeholder="Cục CSQL HKTT và DLQG về dân cư">
+              <div class="field-err" id="e-cccd-place">Vui lòng nhập nơi cấp</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 3. Sức khoẻ -->
+      <div class="section">
+        <div class="section-head">
+          <div class="section-num">3</div>
+          <div class="section-title">Thông tin sức khoẻ</div>
+        </div>
+        <div class="section-body">
+
+          <div class="field">
+            <label class="field-label">Run tay không? <span class="req">*</span></label>
+            <div class="pill-group">
+              <label class="pill" onclick="pick(this,'run-tay','Không')"><span class="pill-dot"></span> Không<input type="radio" name="run-tay" value="Không"></label>
+              <label class="pill" onclick="pick(this,'run-tay','Có')"><span class="pill-dot"></span> Có<input type="radio" name="run-tay" value="Có"></label>
+            </div>
+            <div class="field-err" id="e-run-tay">Vui lòng chọn</div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Cận thị không? <span class="req">*</span></label>
+            <div class="pill-group">
+              <label class="pill" onclick="pick(this,'can','Không')"><span class="pill-dot"></span> Không<input type="radio" name="can" value="Không"></label>
+              <label class="pill" onclick="pick(this,'can','Có')"><span class="pill-dot"></span> Có<input type="radio" name="can" value="Có"></label>
+            </div>
+            <div class="field-err" id="e-can">Vui lòng chọn</div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Dễ đổ mồ hôi tay không? <span class="req">*</span></label>
+            <div class="pill-group">
+              <label class="pill" onclick="pick(this,'mohoitay','Không')"><span class="pill-dot"></span> Không<input type="radio" name="mohoitay" value="Không"></label>
+              <label class="pill" onclick="pick(this,'mohoitay','Có')"><span class="pill-dot"></span> Có<input type="radio" name="mohoitay" value="Có"></label>
+            </div>
+            <div class="field-err" id="e-mohoitay">Vui lòng chọn</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 4. Học vấn & KN -->
+      <div class="section">
+        <div class="section-head">
+          <div class="section-num">4</div>
+          <div class="section-title">Học vấn &amp; Kinh nghiệm</div>
+        </div>
+        <div class="section-body">
+
+          <div class="field">
+            <label class="field-label">Trình độ học vấn <span class="req">*</span></label>
+            <select id="education">
+              <option value="">— Chọn trình độ —</option>
+              <option value="Cấp 2">Cấp 2 (THCS)</option>
+              <option value="Cấp 3">Cấp 3 (THPT)</option>
+              <option value="Trung cấp">Trung cấp / Nghề</option>
+              <option value="Cao đẳng">Cao đẳng</option>
+              <option value="Đại học">Đại học</option>
+              <option value="Khác">Khác</option>
+            </select>
+            <div class="field-err" id="e-education">Vui lòng chọn trình độ</div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label class="field-label">Tên công ty gần nhất <span class="req">*</span></label>
+              <input type="text" id="company" placeholder="Tên công ty" maxlength="150">
+              <div class="field-err" id="e-company">Vui lòng nhập tên công ty</div>
+            </div>
+            <div class="field">
+              <label class="field-label">Số năm kinh nghiệm <span class="req">*</span></label>
+              <input type="number" id="experience" placeholder="2" min="0" max="50">
+              <div class="field-err" id="e-experience">Vui lòng nhập số năm</div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label class="field-label">Lương kỳ vọng (VNĐ/tháng) <span class="req">*</span></label>
+              <input type="text" id="salary" placeholder="8.000.000">
+              <div class="field-err" id="e-salary">Vui lòng nhập mức lương</div>
+            </div>
+            <div class="field">
+              <label class="field-label">Có thể bắt đầu khi nào? <span class="req">*</span></label>
+              <input type="date" id="start-date">
+              <div class="field-err" id="e-start-date">Vui lòng chọn ngày</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 5. Pandora -->
+      <div class="section">
+        <div class="section-head">
+          <div class="section-num">5</div>
+          <div class="section-title">Thông tin liên quan Pandora</div>
+        </div>
+        <div class="section-body">
+
+          <div class="field">
+            <label class="field-label">Pandora đã từng liên hệ bạn chưa? <span class="req">*</span></label>
+            <div class="pill-group">
+              <label class="pill" onclick="pick(this,'pdcontact','Chưa từng');showIv(false)"><span class="pill-dot"></span> Chưa từng<input type="radio" name="pdcontact" value="Chưa từng"></label>
+              <label class="pill" onclick="pick(this,'pdcontact','Đã liên hệ');showIv(true)"><span class="pill-dot"></span> Rồi – đã được liên hệ<input type="radio" name="pdcontact" value="Đã liên hệ"></label>
+            </div>
+            <div class="field-err" id="e-pdcontact">Vui lòng chọn</div>
+          </div>
+
+          <div class="field" id="iv-field" style="display:none;">
+            <label class="field-label">Nếu rồi – đã đi phỏng vấn chưa? <span class="req">*</span></label>
+            <div class="pill-group">
+              <label class="pill" onclick="pick(this,'pdinterview','Chưa')"><span class="pill-dot"></span> Chưa<input type="radio" name="pdinterview" value="Chưa"></label>
+              <label class="pill" onclick="pick(this,'pdinterview','Đã phỏng vấn')"><span class="pill-dot"></span> Đã phỏng vấn<input type="radio" name="pdinterview" value="Đã phỏng vấn"></label>
+            </div>
+            <div class="field-err" id="e-pdinterview">Vui lòng chọn</div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Đang làm cho nhà thầu tại Pandora không? <span class="req">*</span></label>
+            <div class="pill-group">
+              <label class="pill" onclick="pick(this,'pdcontractor','Không')"><span class="pill-dot"></span> Không<input type="radio" name="pdcontractor" value="Không"></label>
+              <label class="pill" onclick="pick(this,'pdcontractor','Có')"><span class="pill-dot"></span> Có<input type="radio" name="pdcontractor" value="Có"></label>
+            </div>
+            <div class="field-err" id="e-pdcontractor">Vui lòng chọn</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 6. Ngân hàng -->
+      <div class="section">
+        <div class="section-head">
+          <div class="section-num">6</div>
+          <div class="section-title">Thông tin ngân hàng</div>
+        </div>
+        <div class="section-body">
+          <div class="notice" style="margin-bottom:16px;font-size:0.78rem;">Số tài khoản chỉ dùng để xử lý thanh toán lương, được bảo mật tuyệt đối.</div>
+          <div class="field">
+            <label class="field-label">Số tài khoản ngân hàng <span class="req">*</span></label>
+            <input type="text" id="bank-account" placeholder="0123456789" maxlength="20">
+            <div class="field-err" id="e-bank-account">Vui lòng nhập số tài khoản</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7. Tài liệu -->
+      <div class="section">
+        <div class="section-head">
+          <div class="section-num">7</div>
+          <div class="section-title">Tài liệu đính kèm</div>
+        </div>
+        <div class="section-body">
+
+          <div class="field">
+            <label class="field-label">Ảnh CCCD <span class="req">*</span> <span class="hint">2 mặt hoặc 1 mặt rõ nét</span></label>
+            <div class="upload-wrap" id="uw-cccd">
+              <input type="file" id="f-cccd" accept="image/*" onchange="onFile(this,'pv-cccd','pv-cccd-img','uw-cccd')">
+              <div class="upload-icon">🪪</div>
+              <div class="upload-label"><strong>Chọn ảnh</strong> hoặc kéo thả vào đây</div>
+              <div class="upload-sub">JPG · PNG · HEIC — Tối đa 5 MB</div>
+            </div>
+            <div class="preview-box" id="pv-cccd">
+              <img id="pv-cccd-img" src="" alt="CCCD">
+              <button type="button" class="preview-remove" onclick="rmFile('f-cccd','pv-cccd','uw-cccd')">✕</button>
+            </div>
+            <div class="field-err" id="e-f-cccd">Vui lòng đính kèm ảnh CCCD</div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Ảnh số tài khoản ngân hàng <span class="req">*</span> <span class="hint">Sổ TK hoặc app ngân hàng</span></label>
+            <div class="upload-wrap" id="uw-bank">
+              <input type="file" id="f-bank" accept="image/*" onchange="onFile(this,'pv-bank','pv-bank-img','uw-bank')">
+              <div class="upload-icon">🏦</div>
+              <div class="upload-label"><strong>Chọn ảnh</strong> hoặc kéo thả vào đây</div>
+              <div class="upload-sub">JPG · PNG · HEIC — Tối đa 5 MB</div>
+            </div>
+            <div class="preview-box" id="pv-bank">
+              <img id="pv-bank-img" src="" alt="Bank">
+              <button type="button" class="preview-remove" onclick="rmFile('f-bank','pv-bank','uw-bank')">✕</button>
+            </div>
+            <div class="field-err" id="e-f-bank">Vui lòng đính kèm ảnh số tài khoản</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Consent -->
+      <div class="consent-box">
+        <div class="consent-title">Điều khoản &amp; Đồng ý xử lý dữ liệu</div>
+        <div class="consent-scroll">
+          Theo Nghị định 13/2023/NĐ-CP về bảo vệ dữ liệu cá nhân:<br><br>
+          <strong>Mục đích:</strong> Thu thập nhằm phục vụ tuyển dụng, xác minh nhân thân, xử lý hợp đồng lao động và các chế độ phúc lợi liên quan.<br><br>
+          <strong>Phạm vi:</strong> Chỉ sử dụng nội bộ bởi bộ phận Nhân sự. Không chia sẻ với bên thứ ba ngoại trừ yêu cầu từ cơ quan nhà nước có thẩm quyền.<br><br>
+          <strong>Lưu trữ:</strong> Trong suốt quá trình xét tuyển. Nếu không trúng tuyển, dữ liệu xóa sau 90 ngày.<br><br>
+          <strong>Quyền của bạn:</strong> Truy cập, chỉnh sửa hoặc yêu cầu xóa dữ liệu bất kỳ lúc nào qua bộ phận Nhân sự.<br><br>
+          Bằng cách tích vào ô bên dưới, bạn xác nhận thông tin chính xác và đồng ý xử lý dữ liệu theo mục đích trên.
+        </div>
+        <label class="consent-check-row">
+          <input type="checkbox" id="consent">
+          <div class="consent-check-box"></div>
+          <span class="consent-check-label">Tôi đã đọc và đồng ý với điều khoản xử lý dữ liệu cá nhân <span class="req">*</span></span>
+        </label>
+        <div class="field-err" id="e-consent">Bạn phải đồng ý để tiếp tục</div>
+      </div>
+
+      <button type="submit" class="submit-btn" id="sub-btn">Gửi đăng ký</button>
+
+    </form>
+
+    <div class="page-footer">
+      Dữ liệu được bảo mật · <a href="#">Chính sách quyền riêng tư</a> · Never share your password
+    </div>
+
+  </div><!-- /form-wrap -->
+</div>
+
+<script>
+const imgs = {};
+
+function pick(el, name, val) {
+  document.querySelectorAll(`[name="${name}"]`).forEach(r => r.closest('.pill').classList.remove('on'));
+  el.classList.add('on');
+  hideE('e-' + name);
+  prog();
+}
+function rv(name) {
+  const r = document.querySelector(`input[name="${name}"]:checked`);
+  return r ? r.value : '';
+}
+function showIv(b) {
+  document.getElementById('iv-field').style.display = b ? 'block' : 'none';
+  if (!b) { document.querySelectorAll('[name="pdinterview"]').forEach(r => { r.closest('.pill').classList.remove('on'); r.checked=false; }); }
+}
+
+function onFile(inp, pvId, imgId, areaId) {
+  const f = inp.files[0]; if (!f) return;
+  if (f.size > 5*1024*1024) { alert('File quá lớn! Vui lòng chọn file dưới 5MB.'); inp.value=''; return; }
+  const rd = new FileReader();
+  rd.onload = e => {
+    imgs[inp.id] = e.target.result;
+    const pv = document.getElementById(pvId);
+    pv.style.display = 'block';
+    document.getElementById(imgId).src = e.target.result;
+    document.getElementById(areaId).style.borderColor = 'var(--rose)';
+    hideE('e-' + inp.id); prog();
+  };
+  rd.readAsDataURL(f);
+}
+function rmFile(inpId, pvId, areaId) {
+  document.getElementById(inpId).value = '';
+  delete imgs[inpId];
+  document.getElementById(pvId).style.display = 'none';
+  document.getElementById(areaId).style.borderColor = '';
+  prog();
+}
+
+// Drag-drop
+document.querySelectorAll('.upload-wrap').forEach(a => {
+  a.addEventListener('dragover', e => { e.preventDefault(); a.classList.add('over'); });
+  a.addEventListener('dragleave', () => a.classList.remove('over'));
+  a.addEventListener('drop', e => {
+    e.preventDefault(); a.classList.remove('over');
+    const inp = a.querySelector('input[type=file]');
+    if (e.dataTransfer.files.length) { inp.files = e.dataTransfer.files; inp.dispatchEvent(new Event('change')); }
+  });
+});
+
+function showE(id) { const e=document.getElementById(id); if(e) e.classList.add('show'); }
+function hideE(id) { const e=document.getElementById(id); if(e) e.classList.remove('show'); }
+function setErr(fid, eid, bad) {
+  const f=document.getElementById(fid);
+  if(f) f.classList.toggle('err', bad);
+  bad ? showE(eid) : hideE(eid);
+  return bad;
+}
+
+function validate() {
+  let ok = true;
+  const txt = [
+    ['fullname','e-fullname', v=>v.trim().length>=2],
+    ['phone','e-phone', v=>/^[0-9]{9,11}$/.test(v.replace(/\s/g,''))],
+    ['email','e-email', v=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)],
+    ['age','e-age', v=>v>=16&&v<=60],
+    ['address','e-address', v=>v.trim().length>=5],
+    ['cccd','e-cccd', v=>/^\d{9,12}$/.test(v.trim())],
+    ['cccd-date','e-cccd-date', v=>!!v],
+    ['cccd-place','e-cccd-place', v=>v.trim().length>=3],
+    ['education','e-education', v=>!!v],
+    ['company','e-company', v=>v.trim().length>=1],
+    ['experience','e-experience', v=>v!==''&&v>=0],
+    ['salary','e-salary', v=>v.trim().length>=1],
+    ['start-date','e-start-date', v=>!!v],
+    ['bank-account','e-bank-account', v=>v.trim().length>=6],
+  ];
+  txt.forEach(([f,e,t]) => { if(setErr(f,e,!t(document.getElementById(f).value||''))) ok=false; });
+
+  [['gender','e-gender'],['run-tay','e-run-tay'],['can','e-can'],['mohoitay','e-mohoitay'],['pdcontact','e-pdcontact'],['pdcontractor','e-pdcontractor']]
+    .forEach(([n,e]) => { if(!rv(n)) { showE(e); ok=false; } else hideE(e); });
+
+  if(rv('pdcontact')==='Đã liên hệ') {
+    if(!rv('pdinterview')) { showE('e-pdinterview'); ok=false; } else hideE('e-pdinterview');
+  }
+  if(!imgs['f-cccd']) { showE('e-f-cccd'); ok=false; } else hideE('e-f-cccd');
+  if(!imgs['f-bank']) { showE('e-f-bank'); ok=false; } else hideE('e-f-bank');
+  if(!document.getElementById('consent').checked) { showE('e-consent'); ok=false; } else hideE('e-consent');
+  return ok;
+}
+
+function prog() {
+  const fs=['fullname','phone','email','age','address','cccd','cccd-date','cccd-place','education','company','experience','salary','start-date','bank-account'];
+  const rs=['gender','run-tay','can','mohoitay','pdcontact','pdcontractor'];
+  let n=0, tot=fs.length+rs.length+2;
+  fs.forEach(id => { const v=(document.getElementById(id)||{}).value; if(v&&v.trim()) n++; });
+  rs.forEach(nm => { if(rv(nm)) n++; });
+  if(imgs['f-cccd']) n++; if(imgs['f-bank']) n++;
+  document.getElementById('prog-bar').style.width = Math.round(n/tot*100)+'%';
+}
+document.querySelectorAll('input,select,textarea').forEach(el => { el.addEventListener('input',prog); el.addEventListener('change',prog); });
+
+document.getElementById('main-form').addEventListener('submit', e => {
+  e.preventDefault();
+  if(!validate()) { document.querySelector('.field-err.show')?.scrollIntoView({behavior:'smooth',block:'center'}); return; }
+  const btn=document.getElementById('sub-btn');
+  btn.disabled=true; btn.textContent='Đang gửi…';
+  const sub = {
+    id:'PDR-'+Date.now(), timestamp:new Date().toISOString(),
+    fullname:document.getElementById('fullname').value.trim(),
+    phone:document.getElementById('phone').value.trim(),
+    email:document.getElementById('email').value.trim(),
+    age:document.getElementById('age').value,
+    gender:rv('gender'), address:document.getElementById('address').value.trim(),
+    cccd:document.getElementById('cccd').value.trim(),
+    cccdDate:document.getElementById('cccd-date').value,
+    cccdPlace:document.getElementById('cccd-place').value.trim(),
+    runTay:rv('run-tay'), can:rv('can'), moHoiTay:rv('mohoitay'),
+    education:document.getElementById('education').value,
+    company:document.getElementById('company').value.trim(),
+    experience:document.getElementById('experience').value,
+    salary:document.getElementById('salary').value.trim(),
+    startDate:document.getElementById('start-date').value,
+    pandoraContact:rv('pdcontact'), pandoraInterview:rv('pdinterview')||'N/A',
+    pandoraContractor:rv('pdcontractor'),
+    bankAccount:document.getElementById('bank-account').value.trim(),
+    cccdPhoto:imgs['f-cccd']||'', bankPhoto:imgs['f-bank']||'',
+  };
+  try {
+    const arr=JSON.parse(localStorage.getItem('pandora_submissions')||'[]');
+    arr.push(sub);
+    localStorage.setItem('pandora_submissions',JSON.stringify(arr));
+  } catch(err){}
+  setTimeout(()=>{
+    document.getElementById('form-wrap').style.display='none';
+    document.getElementById('success-page').style.display='block';
+    document.getElementById('ref-code').textContent='Mã tham chiếu: '+sub.id;
+    window.scrollTo(0,0);
+  },700);
+});
+</script>
+</body>
+</html>
