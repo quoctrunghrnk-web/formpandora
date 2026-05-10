@@ -166,6 +166,57 @@
 
   .footer-note { text-align: center; font-size: 0.72rem; color: #ccc; margin-top: 28px; }
   .footer-note a { color: var(--rose-mid); text-decoration: none; }
+
+  /* ══════════════════════════════
+     RESPONSIVE
+  ══════════════════════════════ */
+
+  /* Tablet (≤600px) */
+  @media (max-width: 600px) {
+    .container { padding: 20px 12px 60px; }
+    .card-body { padding: 16px; }
+    .card-head { padding: 14px 16px; }
+
+    /* Prevent iOS auto-zoom (font-size ≥ 16px on inputs) */
+    input[type="text"], select, textarea {
+      font-size: 1rem;
+      padding: 12px 14px;
+    }
+    select { padding-right: 36px; }
+
+    .btn-rose, .btn-ghost { padding: 14px; font-size: 0.88rem; }
+
+    .steps { gap: 0; }
+    .step-label { font-size: 0.64rem; }
+  }
+
+  /* Phone (≤420px) */
+  @media (max-width: 420px) {
+    .container { padding: 12px 8px 60px; }
+    .brand-logo { font-size: 1.3rem; letter-spacing: 0.25em; }
+    .brand-subtitle { font-size: 0.65rem; }
+
+    .card-body { padding: 14px; }
+    .card-head { gap: 8px; }
+    .card-title { font-size: 0.95rem; }
+
+    .step-line { flex: 0 0 24px; }
+    .step-circle { width: 28px; height: 28px; font-size: 0.72rem; }
+
+    .notice { padding: 10px 12px; font-size: 0.78rem; }
+    .field { margin-bottom: 16px; }
+    label.fl { font-size: 0.72rem; }
+
+    .name-badge { padding: 10px 12px; }
+    .name-badge-text strong { font-size: 0.92rem; }
+    .existing-notice { font-size: 0.76rem; padding: 10px 12px; }
+
+    .upload-wrap { padding: 18px 12px; }
+    .upload-icon { font-size: 1.5rem; }
+
+    #success-view { padding: 36px 16px; }
+    #success-view h2 { font-size: 1.3rem; }
+  }
 </style>
 </head>
 <body>
