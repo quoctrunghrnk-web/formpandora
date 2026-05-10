@@ -1292,11 +1292,21 @@ document.querySelectorAll('.sb-item').forEach(el => {
 
 // ══════════════════════════════════════════════════════
 //  FORM BUILDER  (Google Forms style)
+//  Architecture: _lid-based stable IDs
+//   fbInit()  — the ONLY place fbFields is populated from API
+//   fbRender() — pure renderer, NEVER touches fbFields
+//   fbPatch(lid,key,val) — mutate by stable lid, then schedule save
+//   fbSave(lid) — POST if new (no .id), PUT if existing
 // ══════════════════════════════════════════════════════
-let fbFields = [];   // working copy of customFieldDefs
-let fbActiveIdx = null;
-let fbDragSrc = null;
-const fbSaveTimers = {};
+let fbFields = [];       // working copy; each entry has a _lid
+let fbActiveId = null;   // _lid of currently-expanded card (NOT an index)
+let fbDragSrcIdx = null;
+const fbTimers = {};     // debounce timers keyed by _lid
+let fbSeq = 0;           // monotonic counter for _lid generation
+
+function fbLid()        { return 'lid-' + (++fbSeq); }
+function fbFind(lid)    { return fbFields.find(f => f._lid === lid); }
+function fbFindIdx(lid) { return fbFields.findIndex(f => f._lid === lid); }
 
 const FIELD_TYPES = [
   { type:'text',     icon:'✏️', label:'Văn bản' },
@@ -1305,6 +1315,7 @@ const FIELD_TYPES = [
   { type:'textarea', icon:'📝', label:'Đoạn văn' },
   { type:'select',   icon:'▾',  label:'Danh sách' },
   { type:'radio',    icon:'⊙',  label:'Chọn một' },
+  { type:'checkbox', icon:'☑',  label:'Nhiều chọn' },
 ];
 
 const SYSTEM_FIELDS = [
@@ -1326,14 +1337,31 @@ const SYSTEM_FIELDS = [
   { icon:'🏧', label:'Ảnh số tài khoản ngân hàng',        type:'Ảnh' },
 ];
 
-// ── Render form builder ───────────────────────────────
-function renderFieldsTab() { renderFormBuilder(); }
+// ── Init (loads from API, sets state) ────────────────
+function renderFieldsTab() { fbInit(); }
 
-function renderFormBuilder() {
-  fbFields = customFieldDefs.map(f => ({ ...f })); // deep copy
+async function fbInit() {
+  document.getElementById('cf-list-body').innerHTML =
+    '<div style="padding:40px;text-align:center;color:var(--muted)">🌸 Đang tải…</div>';
+  try {
+    const res = await fetch('/api/fields');
+    const data = res.ok ? await res.json() : [];
+    // Assign stable _lid to each field exactly once
+    fbFields = data.map(f => ({ ...f, _lid: fbLid() }));
+    customFieldDefs = data;
+    buildColPanel();
+  } catch {
+    fbFields = [];
+  }
+  fbRender();
+}
+
+// ── Pure renderer (NEVER mutates fbFields) ────────────
+function fbRender() {
   const body = document.getElementById('cf-list-body');
   body.innerHTML = buildBuilderHTML();
-  // Re-attach drag listeners after render
+  // Attach drag listeners using current DOM order (index-safe here
+  // because drag always leads to re-render before next interaction)
   document.querySelectorAll('.fb-card').forEach((card, i) => {
     card.addEventListener('dragstart', e => fbDragStart(e, i));
     card.addEventListener('dragover',  e => fbDragOver(e, i));
@@ -1388,7 +1416,7 @@ function buildBuilderHTML() {
     <div class="fb-add-bar-label">＋ Thêm câu hỏi mới — chọn kiểu nhập liệu</div>
     <div class="fb-type-grid">
       ${FIELD_TYPES.map(t => `
-        <button class="fb-type-btn" onclick="fbAddField('${t.type}')">
+        <button class="fb-type-btn" onclick="fbAdd('${t.type}')">
           <span class="fb-type-btn-icon">${t.icon}</span>
           <span class="fb-type-btn-label">${t.label}</span>
         </button>`).join('')}
@@ -1398,49 +1426,51 @@ function buildBuilderHTML() {
 }
 
 function buildFieldCard(f, i) {
-  const typeIcon = {text:'✏️',number:'🔢',date:'📅',textarea:'📝',select:'▾',radio:'⊙'}[f.type] || '📋';
-  const hasOpts = f.type === 'select' || f.type === 'radio';
+  const lid = f._lid; // stable ID — never changes across re-renders
+  const typeIcon = {text:'✏️',number:'🔢',date:'📅',textarea:'📝',select:'▾',radio:'⊙',checkbox:'☑'}[f.type] || '📋';
+  const hasOpts = f.type === 'select' || f.type === 'radio' || f.type === 'checkbox';
   const opts = (f.options || '').split('\n').filter(Boolean);
-  const isActive = i === fbActiveIdx;
+  const isActive = f._lid === fbActiveId;
+  const bullet = f.type === 'radio' ? '○' : '☐';
 
-  return `<div class="fb-card${isActive?' active':''}" id="fbc-${i}" draggable="true">
-  <div class="fb-card-head" onclick="fbToggle(${i})">
+  return `<div class="fb-card${isActive?' active':''}" id="fbc-${lid}" draggable="true">
+  <div class="fb-card-head" onclick="fbToggle('${lid}')">
     <span class="fb-handle" ondragstart="event.stopPropagation()" draggable="false">⠿</span>
     <span class="fb-field-icon">${typeIcon}</span>
     <input class="fb-label-input" type="text" value="${x(f.label)}"
       placeholder="Nhập tên câu hỏi…" maxlength="100"
       onclick="event.stopPropagation()"
-      oninput="fbFields[${i}].label=this.value; fbScheduleSave(${i})">
+      oninput="fbPatch('${lid}','label',this.value)">
     <select class="fb-type-select" onclick="event.stopPropagation()"
-      onchange="fbFields[${i}].type=this.value; fbScheduleSave(${i}); renderFormBuilder(); fbActiveIdx=${i}; renderFormBuilder();">
+      onchange="fbChangeType('${lid}',this.value)">
       ${FIELD_TYPES.map(t=>`<option value="${t.type}"${f.type===t.type?' selected':''}>${t.label}</option>`).join('')}
     </select>
-    <button class="fb-del-btn" title="Xoá trường" onclick="event.stopPropagation(); fbDelete(${i})">🗑</button>
+    <button class="fb-del-btn" title="Xoá trường" onclick="event.stopPropagation(); fbRemove('${lid}')">🗑</button>
   </div>
   <div class="fb-card-body">
     ${hasOpts ? `<div>
       <div class="fb-opt-label">Các lựa chọn:</div>
       ${opts.map((o,oi) => `
         <div class="fb-option-row">
-          <span class="fb-option-bullet">${f.type==='radio'?'○':'☐'}</span>
+          <span class="fb-option-bullet">${bullet}</span>
           <input class="fb-option-input" type="text" value="${x(o)}"
             placeholder="Lựa chọn ${oi+1}"
-            oninput="fbUpdateOption(${i},${oi},this.value)">
-          <button class="fb-option-del" onclick="fbRemoveOption(${i},${oi})">✕</button>
+            oninput="fbPatchOpt('${lid}',${oi},this.value)">
+          <button class="fb-option-del" onclick="fbRemoveOpt('${lid}',${oi})">✕</button>
         </div>`).join('')}
-      <button class="fb-add-option-btn" onclick="fbAddOption(${i})">＋ Thêm lựa chọn</button>
+      <button class="fb-add-option-btn" onclick="fbAddOpt('${lid}')">＋ Thêm lựa chọn</button>
     </div>` : ''}
     <div class="fb-card-footer">
       <label class="fb-check">
-        <input type="checkbox" ${f.required?'checked':''} onchange="fbFields[${i}].required=this.checked?1:0; fbScheduleSave(${i})">
+        <input type="checkbox" ${f.required?'checked':''} onchange="fbPatch('${lid}','required',this.checked?1:0)">
         Bắt buộc
       </label>
       <label class="fb-check">
-        <input type="checkbox" ${f.show_in_form?'checked':''} onchange="fbFields[${i}].show_in_form=this.checked?1:0; fbScheduleSave(${i})">
+        <input type="checkbox" ${f.show_in_form?'checked':''} onchange="fbPatch('${lid}','show_in_form',this.checked?1:0)">
         Form đăng ký
       </label>
       <label class="fb-check">
-        <input type="checkbox" ${f.show_in_supplement?'checked':''} onchange="fbFields[${i}].show_in_supplement=this.checked?1:0; fbScheduleSave(${i})">
+        <input type="checkbox" ${f.show_in_supplement?'checked':''} onchange="fbPatch('${lid}','show_in_supplement',this.checked?1:0)">
         Form bổ sung
       </label>
     </div>
@@ -1448,75 +1478,114 @@ function buildFieldCard(f, i) {
 </div>`;
 }
 
-// ── Card toggle ───────────────────────────────────────
-function fbToggle(i) {
-  fbActiveIdx = (fbActiveIdx === i) ? null : i;
-  document.querySelectorAll('.fb-card').forEach((c, idx) => c.classList.toggle('active', idx === fbActiveIdx));
+// ── Card toggle (surgical — no re-render) ─────────────
+function fbToggle(lid) {
+  fbActiveId = (fbActiveId === lid) ? null : lid;
+  document.querySelectorAll('.fb-card').forEach(card => {
+    const cardLid = card.id.replace('fbc-', '');
+    card.classList.toggle('active', cardLid === fbActiveId);
+  });
 }
 
 // ── Add field ─────────────────────────────────────────
-async function fbAddField(type) {
+// Correct order: push → render (shows card) → save (POSTs to API)
+// fbRender() never resets fbFields, so the new entry survives
+async function fbAdd(type) {
   const maxPos = fbFields.length ? Math.max(...fbFields.map(f => f.position || 0)) : 0;
-  const nf = { id: null, label: '', type, options: '', required: 0, show_in_form: 1, show_in_supplement: 0, position: maxPos + 10 };
+  const lid = fbLid();
+  const nf = {
+    _lid: lid, id: null, label: '', type,
+    options: '', required: 0,
+    show_in_form: 1, show_in_supplement: 0,
+    position: maxPos + 10,
+  };
   fbFields.push(nf);
-  fbActiveIdx = fbFields.length - 1;
-  renderFormBuilder();
-  // Focus new card label
+  fbActiveId = lid;
+  fbRender(); // shows the card immediately
   setTimeout(() => {
-    const inp = document.querySelector(`#fbc-${fbActiveIdx} .fb-label-input`);
+    const inp = document.querySelector(`#fbc-${lid} .fb-label-input`);
     if (inp) inp.focus();
   }, 60);
-  await fbSaveAt(fbFields.length - 1);
+  await fbSave(lid); // POST new field to API
 }
 
 // ── Delete field ──────────────────────────────────────
-async function fbDelete(i) {
-  const f = fbFields[i];
+async function fbRemove(lid) {
+  const f = fbFind(lid);
+  if (!f) return;
   if (!confirm(`Xoá trường "${f.label || '(chưa đặt tên)'}"?\nDữ liệu đã thu thập vẫn còn trong DB.`)) return;
   if (f.id) {
     try { await fetch('/api/fields/' + f.id, { method: 'DELETE', headers: { 'X-Admin-Key': adminKey } }); }
     catch (e) { alert('Lỗi xoá: ' + e.message); return; }
   }
-  fbFields.splice(i, 1);
-  fbActiveIdx = null;
-  customFieldDefs = [...fbFields];
+  const idx = fbFindIdx(lid);
+  if (idx !== -1) fbFields.splice(idx, 1);
+  if (fbActiveId === lid) fbActiveId = null;
+  customFieldDefs = fbFields.map(({ _lid, ...rest }) => rest);
   buildColPanel();
-  renderFormBuilder();
+  fbRender();
+}
+
+// ── Patch a single field property ────────────────────
+// All state mutations go through here — no direct fbFields[i] access in handlers
+function fbPatch(lid, key, val) {
+  const f = fbFind(lid);
+  if (!f) return;
+  f[key] = val;
+  fbScheduleSave(lid);
+}
+
+// ── Change type (needs re-render to show/hide options) ─
+function fbChangeType(lid, type) {
+  const f = fbFind(lid);
+  if (!f) return;
+  f.type = type;
+  fbActiveId = lid; // keep card expanded after re-render
+  fbRender();
+  fbScheduleSave(lid);
 }
 
 // ── Options helpers ───────────────────────────────────
-function fbUpdateOption(fi, oi, val) {
-  const arr = (fbFields[fi].options || '').split('\n');
+function fbPatchOpt(lid, oi, val) {
+  const f = fbFind(lid);
+  if (!f) return;
+  const arr = (f.options || '').split('\n');
   arr[oi] = val;
-  fbFields[fi].options = arr.join('\n');
-  fbScheduleSave(fi);
+  f.options = arr.join('\n');
+  fbScheduleSave(lid);
 }
-function fbAddOption(fi) {
-  fbFields[fi].options = ((fbFields[fi].options || '').trimEnd()) + '\nLựa chọn mới';
-  fbActiveIdx = fi;
-  renderFormBuilder();
-  // Focus the last input
-  const inputs = document.querySelectorAll(`#fbc-${fi} .fb-option-input`);
+
+function fbAddOpt(lid) {
+  const f = fbFind(lid);
+  if (!f) return;
+  f.options = ((f.options || '').trimEnd()) + '\nLựa chọn mới';
+  fbActiveId = lid;
+  fbRender();
+  const inputs = document.querySelectorAll(`#fbc-${lid} .fb-option-input`);
   if (inputs.length) { const last = inputs[inputs.length - 1]; last.focus(); last.select(); }
 }
-function fbRemoveOption(fi, oi) {
-  const arr = (fbFields[fi].options || '').split('\n').filter(Boolean);
+
+function fbRemoveOpt(lid, oi) {
+  const f = fbFind(lid);
+  if (!f) return;
+  const arr = (f.options || '').split('\n').filter(Boolean);
   arr.splice(oi, 1);
-  fbFields[fi].options = arr.join('\n');
-  fbActiveIdx = fi;
-  fbScheduleSave(fi);
-  renderFormBuilder();
+  f.options = arr.join('\n');
+  fbActiveId = lid;
+  fbRender();
+  fbScheduleSave(lid);
 }
 
-// ── Save (debounced) ──────────────────────────────────
-function fbScheduleSave(i) {
+// ── Save (debounced per lid) ──────────────────────────
+function fbScheduleSave(lid) {
   fbSetStatus('<span style="color:var(--muted)">Đang lưu…</span>');
-  clearTimeout(fbSaveTimers[i]);
-  fbSaveTimers[i] = setTimeout(() => fbSaveAt(i), 900);
+  clearTimeout(fbTimers[lid]);
+  fbTimers[lid] = setTimeout(() => fbSave(lid), 900);
 }
 
-async function fbSaveAt(i) {
-  const f = fbFields[i];
+async function fbSave(lid) {
+  const f = fbFind(lid);
+  if (!f) return;
   const body = {
     label: f.label || '(Chưa đặt tên)',
     type: f.type, options: f.options || '',
@@ -1527,25 +1596,29 @@ async function fbSaveAt(i) {
   };
   try {
     if (f.id) {
+      // Existing field: PUT
       await fetch('/api/fields/' + f.id, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'X-Admin-Key': adminKey },
         body: JSON.stringify(body),
       });
     } else {
+      // New field: POST — assign returned id in place (no re-render!)
       const res = await fetch('/api/fields', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Admin-Key': adminKey },
         body: JSON.stringify(body),
       });
       const json = await res.json();
-      if (json.id) fbFields[i].id = json.id;
+      if (json.id) {
+        f.id = json.id; // mutate in place; _lid unchanged
+      }
     }
-    customFieldDefs = [...fbFields];
+    customFieldDefs = fbFields.map(({ _lid, ...rest }) => rest);
     buildColPanel();
     fbSetStatus('<span style="color:var(--success)">✓ Đã lưu</span>', 2200);
   } catch (e) {
-    fbSetStatus('<span style="color:var(--danger)">✕ Lỗi lưu</span>', 3000);
+    fbSetStatus('<span style="color:var(--danger)">✕ Lỗi lưu: ' + e.message + '</span>', 4000);
   }
 }
 
@@ -1556,12 +1629,16 @@ async function fbSaveAllPositions() {
       fetch('/api/fields/' + f.id, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'X-Admin-Key': adminKey },
-        body: JSON.stringify({ label: f.label || '(Chưa đặt tên)', type: f.type, options: f.options || '',
+        body: JSON.stringify({
+          label: f.label || '(Chưa đặt tên)', type: f.type, options: f.options || '',
           required: f.required ? 1 : 0, showInForm: !!f.show_in_form,
-          showInSupplement: !!f.show_in_supplement, position: (i + 1) * 10 }),
+          showInSupplement: !!f.show_in_supplement, position: (i + 1) * 10,
+        }),
       })
     ));
-    customFieldDefs = [...fbFields];
+    // Update positions in state too
+    fbFields.forEach((f, i) => { f.position = (i + 1) * 10; });
+    customFieldDefs = fbFields.map(({ _lid, ...rest }) => rest);
     buildColPanel();
     fbSetStatus('<span style="color:var(--success)">✓ Đã lưu thứ tự</span>', 2200);
   } catch {
@@ -1580,27 +1657,31 @@ function fbSetStatus(html, clearAfter = 0) {
 
 // ── Drag & Drop ───────────────────────────────────────
 function fbDragStart(e, i) {
-  fbDragSrc = i;
+  fbDragSrcIdx = i;
   e.dataTransfer.effectAllowed = 'move';
-  setTimeout(() => document.getElementById('fbc-' + i)?.classList.add('dragging'), 0);
+  setTimeout(() => {
+    const cards = document.querySelectorAll('.fb-card');
+    if (cards[i]) cards[i].classList.add('dragging');
+  }, 0);
 }
 function fbDragOver(e, i) {
   e.preventDefault();
   e.dataTransfer.dropEffect = 'move';
-  document.querySelectorAll('.fb-card').forEach((c, idx) => c.classList.toggle('drag-over', idx === i && i !== fbDragSrc));
+  document.querySelectorAll('.fb-card').forEach((c, idx) =>
+    c.classList.toggle('drag-over', idx === i && i !== fbDragSrcIdx)
+  );
 }
 function fbDrop(e, i) {
   e.preventDefault();
-  if (fbDragSrc === null || fbDragSrc === i) return;
-  const [moved] = fbFields.splice(fbDragSrc, 1);
+  if (fbDragSrcIdx === null || fbDragSrcIdx === i) return;
+  const [moved] = fbFields.splice(fbDragSrcIdx, 1);
   fbFields.splice(i, 0, moved);
-  fbFields.forEach((f, idx) => { f.position = (idx + 1) * 10; });
-  fbDragSrc = null; fbActiveIdx = null;
-  renderFormBuilder();
+  fbDragSrcIdx = null; fbActiveId = null;
+  fbRender();
   fbSaveAllPositions();
 }
 function fbDragEnd() {
-  fbDragSrc = null;
+  fbDragSrcIdx = null;
   document.querySelectorAll('.fb-card').forEach(c => c.classList.remove('dragging', 'drag-over'));
 }
 
@@ -1647,7 +1728,7 @@ const PREVIEW_SECTIONS = [
 ];
 
 function openPreview() {
-  const customVisible = fbFields.filter(f => f.show_in_form);
+  const customVisible = fbFields.filter(f => f.show_in_form || f.show_in_form === 1);
   let html = `<div class="preview-wrap">
   <div class="preview-header">
     <div class="preview-header-logo">Pandora</div>
@@ -1688,9 +1769,10 @@ function openPreview() {
 function pvField(f) {
   const req = f.req ? ' <span style="color:var(--rose)">*</span>' : '';
   let input = '';
-  if (f.type === 'radio') {
+  if (f.type === 'radio' || f.type === 'checkbox') {
     const opts = (f.options || '').split('\n').filter(Boolean);
-    input = `<div class="preview-pill-group">${opts.map(o => `<div class="preview-pill">${o}</div>`).join('')}</div>`;
+    const bullet = f.type === 'checkbox' ? '☐' : '○';
+    input = `<div class="preview-pill-group">${opts.map(o => `<div class="preview-pill">${bullet} ${o}</div>`).join('')}</div>`;
   } else if (f.type === 'select') {
     input = `<div class="preview-input-mock">— Chọn —</div>`;
   } else if (f.type === 'file') {
