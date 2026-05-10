@@ -5,4 +5,4 @@ pages_build_output_dir = "."
 [[d1_databases]]
 binding = "DB"
 database_name = "pandora-db"
-database_id = "REPLACE_WITH_YOUR_DATABASE_ID"
+database_id = "dae69fda-1139-4845-bbc5-77e049651380"
