@@ -2,7 +2,7 @@
 // Worker tra cứu bằng số CCCD rồi cập nhật thông tin ngân hàng vào đúng dòng cũ
 export async function onRequestPut({ request, env }) {
   try {
-    const { cccd, bankName, bankAccount, bankPhoto } = await request.json();
+    const { cccd, bankName, bankAccount, bankPhoto, customFields } = await request.json();
 
     if (!cccd || cccd.trim().length < 9)
       return Response.json({ ok: false, error: 'invalid_cccd' }, { status: 400 });
@@ -10,15 +10,20 @@ export async function onRequestPut({ request, env }) {
       return Response.json({ ok: false, error: 'missing_bank' }, { status: 400 });
 
     const row = await env.DB.prepare(
-      'SELECT id, fullname FROM submissions WHERE cccd = ?'
+      'SELECT id, fullname, custom_data FROM submissions WHERE cccd = ?'
     ).bind(cccd.trim()).first();
 
     if (!row)
       return Response.json({ ok: false, error: 'not_found' }, { status: 404 });
 
+    const customData = (() => {
+      try { return JSON.parse(row.custom_data || '{}'); } catch { return {}; }
+    })();
+    Object.assign(customData, customFields || {});
+
     await env.DB.prepare(
-      'UPDATE submissions SET bank_name = ?, bank_account = ?, bank_photo = ? WHERE cccd = ?'
-    ).bind(bankName, bankAccount.trim(), bankPhoto || '', cccd.trim()).run();
+      'UPDATE submissions SET bank_name = ?, bank_account = ?, bank_photo = ?, custom_data = ? WHERE cccd = ?'
+    ).bind(bankName, bankAccount.trim(), bankPhoto || '', JSON.stringify(customData), cccd.trim()).run();
 
     return Response.json({ ok: true, fullname: row.fullname, id: row.id });
   } catch (e) {

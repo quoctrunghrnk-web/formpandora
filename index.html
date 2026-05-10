@@ -817,6 +817,16 @@
         </div>
       </div>
 
+      <!-- 8. Custom fields (dynamic) -->
+      <div class="section" id="custom-section" style="display:none;">
+        <div class="section-head">
+          <div class="section-num">8</div>
+          <div class="section-title">Thông tin bổ sung</div>
+        </div>
+        <div class="section-body" id="custom-fields-body">
+        </div>
+      </div>
+
       <!-- Consent -->
       <div class="consent-box">
         <div class="consent-title">Điều khoản &amp; Đồng ý xử lý dữ liệu</div>
@@ -849,6 +859,84 @@
 
 <script>
 const imgs = {};
+let customFieldDefs = [];
+
+async function loadCustomFields() {
+  try {
+    const fields = await fetch('/api/fields').then(r => r.json());
+    customFieldDefs = fields.filter(f => f.show_in_form);
+    if (!customFieldDefs.length) return;
+    const body = document.getElementById('custom-fields-body');
+    body.innerHTML = customFieldDefs.map(f => renderCustomField(f)).join('');
+    document.getElementById('custom-section').style.display = '';
+    document.querySelectorAll('#custom-fields-body input, #custom-fields-body select, #custom-fields-body textarea')
+      .forEach(el => { el.addEventListener('input', prog); el.addEventListener('change', prog); });
+  } catch (_) {}
+}
+
+function renderCustomField(f) {
+  const req = f.required ? '<span class="req">*</span>' : '';
+  const id = 'cf-' + f.id;
+  let input = '';
+  if (f.type === 'text' || f.type === 'number' || f.type === 'date') {
+    input = `<input type="${f.type}" id="${id}" ${f.required ? 'required' : ''}>`;
+  } else if (f.type === 'textarea') {
+    input = `<textarea id="${id}" rows="3" ${f.required ? 'required' : ''}></textarea>`;
+  } else if (f.type === 'select') {
+    const opts = (f.options || '').split('\n').filter(Boolean)
+      .map(o => `<option value="${o.trim()}">${o.trim()}</option>`).join('');
+    input = `<select id="${id}" ${f.required ? 'required' : ''}><option value="">— Chọn —</option>${opts}</select>`;
+  } else if (f.type === 'radio') {
+    const pills = (f.options || '').split('\n').filter(Boolean)
+      .map(o => o.trim())
+      .map(o => `<label class="pill" onclick="pick(this,'${id}','${o}')"><span class="pill-dot"></span> ${o}<input type="radio" name="${id}" value="${o}"></label>`)
+      .join('');
+    input = `<div class="pill-group">${pills}</div>`;
+  }
+  return `<div class="field">
+    <label class="field-label">${f.label} ${req}</label>
+    ${input}
+    ${f.required ? `<div class="field-err" id="e-${id}">Vui lòng điền thông tin này</div>` : ''}
+  </div>`;
+}
+
+function collectCustomData() {
+  const data = {};
+  customFieldDefs.forEach(f => {
+    const id = 'cf-' + f.id;
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (f.type === 'radio') {
+      const checked = document.querySelector(`input[name="${id}"]:checked`);
+      data[f.id] = checked ? checked.value : '';
+    } else {
+      data[f.id] = el.value || '';
+    }
+  });
+  return data;
+}
+
+function validateCustomFields() {
+  let ok = true;
+  customFieldDefs.filter(f => f.required).forEach(f => {
+    const id = 'cf-' + f.id;
+    let val = '';
+    if (f.type === 'radio') {
+      const checked = document.querySelector(`input[name="${id}"]:checked`);
+      val = checked ? checked.value : '';
+    } else {
+      val = (document.getElementById(id) || {}).value || '';
+    }
+    if (!val.trim()) {
+      showE('e-' + id); ok = false;
+    } else {
+      hideE('e-' + id);
+    }
+  });
+  return ok;
+}
+
+loadCustomFields();
 
 function pick(el, name, val) {
   document.querySelectorAll(`[name="${name}"]`).forEach(r => r.closest('.pill').classList.remove('on'));
@@ -961,6 +1049,7 @@ function validate() {
   if(!imgs['f-cccd-front']) { showE('e-f-cccd-front'); ok=false; } else hideE('e-f-cccd-front');
   if(!imgs['f-cccd-back'])  { showE('e-f-cccd-back');  ok=false; } else hideE('e-f-cccd-back');
   if(!imgs['f-bank']) { showE('e-f-bank'); ok=false; } else hideE('e-f-bank');
+  if(!validateCustomFields()) ok=false;
   if(!document.getElementById('consent').checked) { showE('e-consent'); ok=false; } else hideE('e-consent');
   return ok;
 }
@@ -1009,6 +1098,7 @@ document.getElementById('main-form').addEventListener('submit', async e => {
     cccdPhoto:        imgs['f-cccd-front'] || '',
     cccdPhotoBack:    imgs['f-cccd-back']  || '',
     bankPhoto:        imgs['f-bank'] || '',
+    customData:       collectCustomData(),
   };
 
   try {

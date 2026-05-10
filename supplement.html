@@ -327,6 +327,9 @@
             <div class="ferr" id="e-f-bank">Vui lòng đính kèm ảnh tài khoản</div>
           </div>
 
+          <!-- Custom supplement fields (rendered dynamically) -->
+          <div id="custom-supp-fields"></div>
+
           <button class="btn-rose" id="submit-btn" onclick="doSubmit()">Lưu thông tin ngân hàng</button>
           <button class="btn-ghost" onclick="resetToStep1()">← Nhập lại CCCD khác</button>
         </div>
@@ -343,6 +346,57 @@
 
 <script>
 const imgs = {};
+let suppFieldDefs = [];
+
+async function loadSuppFields() {
+  try {
+    suppFieldDefs = await fetch('/api/fields?supplement=1').then(r => r.json());
+    if (!suppFieldDefs.length) return;
+    const body = document.getElementById('custom-supp-fields');
+    body.innerHTML = suppFieldDefs.map(f => {
+      const req = f.required ? '<span class="req">*</span>' : '';
+      const id = 'csf-' + f.id;
+      let input = '';
+      if (f.type === 'text' || f.type === 'number' || f.type === 'date') {
+        input = `<input type="${f.type}" id="${id}">`;
+      } else if (f.type === 'textarea') {
+        input = `<textarea id="${id}" rows="3" style="width:100%;border:1px solid var(--border);border-radius:6px;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:0.92rem;resize:vertical;"></textarea>`;
+      } else if (f.type === 'select') {
+        const opts = (f.options || '').split('\n').filter(Boolean)
+          .map(o => `<option value="${o.trim()}">${o.trim()}</option>`).join('');
+        input = `<select id="${id}"><option value="">— Chọn —</option>${opts}</select>`;
+      }
+      return `<div class="field">
+        <label class="fl">${f.label} ${req}</label>
+        ${input}
+        ${f.required ? `<div class="ferr" id="e-${id}">Vui lòng điền thông tin này</div>` : ''}
+      </div>`;
+    }).join('');
+  } catch (_) {}
+}
+
+function collectSuppCustom() {
+  const data = {};
+  suppFieldDefs.forEach(f => {
+    const el = document.getElementById('csf-' + f.id);
+    if (el) data[f.id] = el.value || '';
+  });
+  return data;
+}
+
+function validateSuppCustom() {
+  let ok = true;
+  suppFieldDefs.filter(f => f.required).forEach(f => {
+    const id = 'csf-' + f.id;
+    const val = (document.getElementById(id) || {}).value || '';
+    const err = document.getElementById('e-' + id);
+    if (!val.trim()) { if (err) err.classList.add('show'); ok = false; }
+    else { if (err) err.classList.remove('show'); }
+  });
+  return ok;
+}
+
+loadSuppFields();
 
 // ── Image compression ─────────────────────────────────
 function compressImage(file, maxKB = 250) {
@@ -466,6 +520,7 @@ async function doSubmit() {
   if (setErr('bank-name', 'e-bank-name', !bankName)) ok = false;
   if (setErr('bank-account', 'e-bank-account', bankAccount.length < 6)) ok = false;
   if (!imgs['f-bank']) { showE('e-f-bank'); ok = false; } else hideE('e-f-bank');
+  if (!validateSuppCustom()) ok = false;
   if (!ok) return;
 
   const btn = document.getElementById('submit-btn');
@@ -482,6 +537,7 @@ async function doSubmit() {
         bankName,
         bankAccount,
         bankPhoto: imgs['f-bank'] || '',
+        customFields: collectSuppCustom(),
       }),
     });
     const json = await res.json();
@@ -513,6 +569,10 @@ function resetToStep1() {
   document.getElementById('bank-name').value = '';
   document.getElementById('bank-account').value = '';
   rmFile('f-bank', 'pv-bank', 'uw-bank');
+  suppFieldDefs.forEach(f => {
+    const el = document.getElementById('csf-' + f.id);
+    if (el) el.value = '';
+  });
 }
 </script>
 </body>

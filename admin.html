@@ -289,6 +289,58 @@
   .stat-bar-wrap { height: 5px; background: var(--rose-light); border-radius: 3px; margin-top: 5px; overflow: hidden; }
   .stat-bar { height: 100%; background: var(--rose); border-radius: 3px; transition: width 0.4s; }
 
+  /* ── Column toggle dropdown ── */
+  .col-toggle-wrap { position: relative; }
+  .col-panel {
+    display: none; position: absolute; top: calc(100% + 8px); right: 0; z-index: 300;
+    background: var(--white); border: 1px solid var(--border); border-radius: 10px;
+    box-shadow: var(--shadow-lg); padding: 12px 0; min-width: 210px;
+  }
+  .col-panel.open { display: block; }
+  .col-panel-title { padding: 4px 16px 10px; font-size: 0.68rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted);
+    border-bottom: 1px solid var(--border); margin-bottom: 6px; }
+  .col-item { display: flex; align-items: center; gap: 10px; padding: 7px 16px; cursor: pointer; }
+  .col-item:hover { background: var(--rose-pale); }
+  .col-item input[type=checkbox] { accent-color: var(--rose); width: 14px; height: 14px; cursor: pointer; }
+  .col-item span { font-size: 0.82rem; color: var(--text); flex: 1; }
+
+  /* ── Custom fields tab ── */
+  .cf-list { padding: 16px 20px; display: flex; flex-direction: column; gap: 10px; }
+  .cf-item {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--white); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 16px; box-shadow: var(--shadow);
+  }
+  .cf-item-drag { color: var(--muted); font-size: 1rem; cursor: grab; user-select: none; }
+  .cf-item-info { flex: 1; }
+  .cf-item-label { font-weight: 500; font-size: 0.88rem; color: var(--charcoal); }
+  .cf-item-meta { font-size: 0.73rem; color: var(--muted); margin-top: 2px; }
+  .cf-tag { display: inline-block; padding: 1px 8px; border-radius: 50px; font-size: 0.68rem; font-weight: 500; margin-right: 4px; }
+  .cf-tag-form { background: var(--rose-light); color: var(--rose-dark); }
+  .cf-tag-supp { background: #e3f0ff; color: #1565c0; }
+  .cf-tag-req  { background: #fff3e0; color: #7a4400; }
+  .cf-empty { padding: 40px; text-align: center; color: var(--muted); font-size: 0.88rem; }
+
+  /* ── Field modal form ── */
+  .mfield { margin-bottom: 16px; }
+  .mfield label { display: block; font-size: 0.72rem; font-weight: 500; text-transform: uppercase;
+    letter-spacing: 0.09em; color: var(--muted); margin-bottom: 6px; }
+  .mfield input[type=text], .mfield input[type=number], .mfield select, .mfield textarea {
+    width: 100%; border: 1px solid var(--border); border-radius: 6px;
+    padding: 9px 12px; font-size: 0.88rem; font-family: inherit; color: var(--text);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .mfield input:focus, .mfield select:focus, .mfield textarea:focus {
+    outline: none; border-color: var(--rose); box-shadow: 0 0 0 3px rgba(196,104,122,0.12);
+  }
+  .mfield textarea { resize: vertical; min-height: 80px; }
+  .mfield-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .mcheck-row { display: flex; gap: 20px; flex-wrap: wrap; padding: 4px 0; }
+  .mcheck { display: flex; align-items: center; gap: 8px; font-size: 0.84rem; cursor: pointer; }
+  .mcheck input { accent-color: var(--rose); width: 15px; height: 15px; cursor: pointer; }
+  .mfield-hint { font-size: 0.72rem; color: var(--muted); margin-top: 5px; }
+
   @media (max-width: 900px) {
     .sidebar { display: none; }
     .main { margin-left: 0; }
@@ -342,6 +394,9 @@
       <div class="sb-item" data-tab="tab-stats" onclick="switchTab(this,'tab-stats','Thống kê')">
         <span class="sb-icon">📊</span> Thống kê
       </div>
+      <div class="sb-item" data-tab="tab-customize" onclick="switchTab(this,'tab-customize','Tuỳ chỉnh trường dữ liệu')">
+        <span class="sb-icon">⚙️</span> Tuỳ chỉnh
+      </div>
     </nav>
     <div class="sb-footer">
       <div class="sb-logout" onclick="doLogout()">
@@ -388,6 +443,13 @@
             <div class="sc-title">Hồ sơ ứng tuyển</div>
             <div class="toolbar">
               <input class="search-box" type="text" id="q" placeholder="Tìm tên, SĐT, email…" oninput="render()">
+              <div class="col-toggle-wrap">
+                <button class="btn btn-ghost btn-sm" onclick="toggleColPanel(event)">☰ Cột</button>
+                <div class="col-panel" id="col-panel">
+                  <div class="col-panel-title">Hiển thị cột</div>
+                  <div id="col-checkboxes"></div>
+                </div>
+              </div>
               <button class="btn btn-outline btn-sm" onclick="exportXLSX()">⬇ Xuất Excel</button>
               <button class="btn btn-ghost btn-sm" id="del-all-btn" onclick="confirmDelAll()" style="display:none;">🗑 Xóa tất cả</button>
             </div>
@@ -444,6 +506,21 @@
         </div>
       </div>
 
+      <!-- ── TAB: CUSTOMIZE ── -->
+      <div id="tab-customize" style="display:none;">
+        <div class="sc">
+          <div class="sc-head">
+            <div class="sc-title">Trường tuỳ chỉnh</div>
+            <div class="toolbar">
+              <button class="btn btn-rose btn-sm" onclick="openFieldModal()">＋ Thêm trường mới</button>
+            </div>
+          </div>
+          <div id="cf-list-body">
+            <div class="cf-empty">Đang tải…</div>
+          </div>
+        </div>
+      </div>
+
     </div><!-- /content -->
   </div><!-- /main -->
 </div>
@@ -460,6 +537,57 @@
     <div class="modal-foot">
       <button class="btn btn-danger btn-sm" id="m-del-btn">Xóa hồ sơ này</button>
       <button class="btn btn-outline btn-sm" onclick="closeM('m-detail')">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Field create/edit -->
+<div class="overlay" id="m-field">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-head">
+      <div class="modal-head-title" id="mf-title">Thêm trường tuỳ chỉnh</div>
+      <button class="modal-close" onclick="closeM('m-field')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="mf-id">
+      <div class="mfield">
+        <label>Tên trường (label) <span style="color:var(--rose)">*</span></label>
+        <input type="text" id="mf-label" placeholder="VD: Kích thước giày, Mã nhân viên…" maxlength="100">
+      </div>
+      <div class="mfield-row">
+        <div class="mfield">
+          <label>Kiểu nhập</label>
+          <select id="mf-type" onchange="toggleOptions()">
+            <option value="text">Văn bản ngắn</option>
+            <option value="textarea">Văn bản dài</option>
+            <option value="number">Số</option>
+            <option value="date">Ngày</option>
+            <option value="select">Danh sách chọn</option>
+            <option value="radio">Chọn một (radio)</option>
+          </select>
+        </div>
+        <div class="mfield">
+          <label>Thứ tự (position)</label>
+          <input type="number" id="mf-pos" value="999" min="1" max="9999">
+        </div>
+      </div>
+      <div class="mfield" id="mf-options-wrap" style="display:none;">
+        <label>Các lựa chọn <span style="color:var(--muted);text-transform:none;font-weight:400;">(mỗi dòng 1 lựa chọn)</span></label>
+        <textarea id="mf-options" rows="4" placeholder="Lựa chọn 1&#10;Lựa chọn 2&#10;Lựa chọn 3"></textarea>
+        <div class="mfield-hint">Mỗi dòng = một lựa chọn. Ứng viên sẽ thấy danh sách này.</div>
+      </div>
+      <div class="mfield">
+        <label>Hiển thị &amp; bắt buộc</label>
+        <div class="mcheck-row">
+          <label class="mcheck"><input type="checkbox" id="mf-form" checked> Hiện trong form đăng ký</label>
+          <label class="mcheck"><input type="checkbox" id="mf-supp"> Hiện trong form bổ sung</label>
+          <label class="mcheck"><input type="checkbox" id="mf-req"> Bắt buộc điền</label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost btn-sm" onclick="closeM('m-field')">Hủy</button>
+      <button class="btn btn-rose btn-sm" onclick="saveField()">Lưu trường</button>
     </div>
   </div>
 </div>
@@ -482,26 +610,90 @@
 </div>
 
 <script>
-// ── Auth & API key ────────────────────────────────────
-let adminKey = '';  // mật khẩu = ADMIN_KEY gửi lên API
-let cache = [];     // dữ liệu đã fetch, dùng cho export & stats
+// ── Auth & data ───────────────────────────────────────
+let adminKey = '';
+let cache = [];
+let customFieldDefs = [];
 
+// ── Fixed column definitions ──────────────────────────
+const FIXED_COLS = [
+  { key:'stt',        label:'#',           always:true },
+  { key:'candidate',  label:'Ứng viên' },
+  { key:'phone',      label:'Điện thoại' },
+  { key:'age_gender', label:'Tuổi/GT' },
+  { key:'education',  label:'Học vấn' },
+  { key:'experience', label:'Kinh nghiệm' },
+  { key:'salary',     label:'Lương KV' },
+  { key:'health',     label:'Sức khoẻ' },
+  { key:'pandora',    label:'Pandora' },
+  { key:'bank',       label:'Ngân hàng' },
+  { key:'timestamp',  label:'Ngày gửi' },
+  { key:'actions',    label:'',            always:true },
+];
+
+const COL_VIS_KEY = 'pandora_col_vis';
+
+function loadColVis() {
+  try { return JSON.parse(localStorage.getItem(COL_VIS_KEY) || 'null') || {}; } catch { return {}; }
+}
+function saveColVis(vis) { localStorage.setItem(COL_VIS_KEY, JSON.stringify(vis)); }
+
+function isColVisible(key) {
+  const c = FIXED_COLS.find(c => c.key === key);
+  if (c && c.always) return true;
+  const vis = loadColVis();
+  return key in vis ? vis[key] : true; // default: visible
+}
+
+function buildColPanel() {
+  const vis = loadColVis();
+  const allCols = [
+    ...FIXED_COLS.filter(c => !c.always),
+    ...customFieldDefs.map(f => ({ key: 'cf_' + f.id, label: f.label })),
+  ];
+  document.getElementById('col-checkboxes').innerHTML = allCols.map(c => {
+    const checked = c.key in vis ? vis[c.key] : true;
+    return `<label class="col-item">
+      <input type="checkbox" ${checked ? 'checked' : ''} onchange="onColToggle('${c.key}',this.checked)">
+      <span>${c.label}</span>
+    </label>`;
+  }).join('');
+}
+
+function onColToggle(key, val) {
+  const vis = loadColVis();
+  vis[key] = val;
+  saveColVis(vis);
+  render();
+}
+
+function toggleColPanel(e) {
+  e.stopPropagation();
+  document.getElementById('col-panel').classList.toggle('open');
+}
+document.addEventListener('click', () => document.getElementById('col-panel')?.classList.remove('open'));
+
+// ── Login ─────────────────────────────────────────────
 async function doLogin() {
   const u = document.getElementById('lu').value.trim();
   const p = document.getElementById('lp').value;
   if (!u || !p) return;
 
-  // Thử gọi API để kiểm tra key có đúng không
   const btn = document.querySelector('.lbtn');
   btn.textContent = 'Đang xác thực…'; btn.disabled = true;
   try {
-    const res = await fetch('/api/submissions', { headers: { 'X-Admin-Key': p } });
-    if (res.status === 401) throw new Error('unauthorized');
-    cache = await res.json();
+    const [subRes, fieldsRes] = await Promise.all([
+      fetch('/api/submissions', { headers: { 'X-Admin-Key': p } }),
+      fetch('/api/fields'),
+    ]);
+    if (subRes.status === 401) throw new Error('unauthorized');
+    cache = await subRes.json();
+    customFieldDefs = fieldsRes.ok ? await fieldsRes.json() : [];
     adminKey = p;
     document.getElementById('login-wrap').style.display = 'none';
     document.getElementById('dash').style.display = 'block';
     document.getElementById('uname').textContent = u;
+    buildColPanel();
     renderTable(cache);
     updateMini(cache);
   } catch {
@@ -539,25 +731,28 @@ async function apiDelete(path) {
   return res.json();
 }
 
-// ── Refresh toàn bộ dữ liệu từ server ────────────────
+// ── Reload ────────────────────────────────────────────
 async function reload() {
   try {
-    cache = await apiGet('/submissions');
+    [cache, customFieldDefs] = await Promise.all([
+      apiGet('/submissions'),
+      fetch('/api/fields').then(r => r.json()),
+    ]);
+    buildColPanel();
     renderTable(cache);
     updateMini(cache);
-  } catch (e) {
-    alert('Lỗi tải dữ liệu: ' + e.message);
-  }
+  } catch (e) { alert('Lỗi tải dữ liệu: ' + e.message); }
 }
 
 // ── Tabs ─────────────────────────────────────────────
 function switchTab(el, tabId, title) {
   document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('on'));
   el.classList.add('on');
-  ['tab-list','tab-stats'].forEach(t => document.getElementById(t).style.display = 'none');
+  ['tab-list','tab-stats','tab-customize'].forEach(t => document.getElementById(t).style.display = 'none');
   document.getElementById(tabId).style.display = 'block';
   document.getElementById('topbar-title').textContent = title;
   if (tabId === 'tab-stats') renderStats();
+  if (tabId === 'tab-customize') renderFieldsTab();
 }
 
 // ── Stats cards ───────────────────────────────────────
@@ -581,7 +776,6 @@ function renderTable(all) {
   const fp = document.getElementById('fp').value;
   const fc = document.getElementById('fc').value;
 
-  // D1 trả về snake_case
   const rows = all.filter(d => {
     const mq = !q || [d.fullname,d.phone,d.email,d.cccd].some(v=>(v||'').toLowerCase().includes(q));
     return mq
@@ -591,43 +785,50 @@ function renderTable(all) {
       && (!fc || d.pandora_contractor===fc);
   });
 
+  // Build visible column list
+  const visCols = FIXED_COLS.filter(c => isColVisible(c.key));
+  const visCF   = customFieldDefs.filter(f => isColVisible('cf_' + f.id));
+  const totalCols = visCols.length + visCF.length;
+
+  // Render header
+  const thead = document.querySelector('thead tr');
+  thead.innerHTML = visCols.map(c =>
+    c.key === 'stt'     ? `<th>#</th>` :
+    c.key === 'actions' ? `<th></th>` :
+    `<th>${c.label}</th>`
+  ).join('') + visCF.map(f => `<th>${x(f.label)}</th>`).join('');
+
   const tbody = document.getElementById('tbody');
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="11" class="no-data"><div class="no-data-icon">🌸</div>Không tìm thấy hồ sơ phù hợp</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="${totalCols}" class="no-data"><div class="no-data-icon">🌸</div>Không tìm thấy hồ sơ phù hợp</td></tr>`;
     return;
   }
-  tbody.innerHTML = rows.map((d,i) => `
-    <tr>
-      <td style="color:var(--muted);font-size:0.72rem;">${i+1}</td>
-      <td>
-        <div class="td-name">${x(d.fullname)}</div>
-        <div class="td-sub">${x(d.email)}</div>
-      </td>
-      <td>${x(d.phone)}</td>
-      <td>${d.age} / ${x(d.gender)}</td>
-      <td><span class="tag tag-edu">${x(d.education)}</span></td>
-      <td>
-        <div>${d.experience} năm</div>
-        <div class="td-sub">${x(d.company)}</div>
-      </td>
-      <td style="white-space:nowrap;">${x(d.salary)}</td>
-      <td>
-        ${htag(d.run_tay,'Run tay')}
-        ${htag(d.can_thi,'Cận')}
-        ${htag(d.mo_hoi_tay,'Mồ hôi')}
-      </td>
-      <td>
-        ${d.pandora_contact==='Đã liên hệ'
-          ? `<span class="tag tag-yes">Đã liên hệ</span>`
-          : `<span class="tag tag-no">Chưa</span>`}
-        ${d.pandora_contractor==='Có'
-          ? `<br><span class="tag tag-warn" style="margin-top:4px;">Nhà thầu</span>` : ''}
-      </td>
-      <td class="td-sub" style="white-space:nowrap;">${fmtDate(d.timestamp)}</td>
-      <td>
-        <button class="btn btn-rose btn-sm" onclick="openDetail('${d.id}')">Xem</button>
-      </td>
-    </tr>`).join('');
+
+  tbody.innerHTML = rows.map((d, i) => {
+    const cd = (() => { try { return JSON.parse(d.custom_data || '{}'); } catch { return {}; } })();
+    const fixedCells = visCols.map(c => {
+      switch (c.key) {
+        case 'stt':        return `<td style="color:var(--muted);font-size:0.72rem;">${i+1}</td>`;
+        case 'candidate':  return `<td><div class="td-name">${x(d.fullname)}</div><div class="td-sub">${x(d.email)}</div></td>`;
+        case 'phone':      return `<td>${x(d.phone)}</td>`;
+        case 'age_gender': return `<td>${d.age} / ${x(d.gender)}</td>`;
+        case 'education':  return `<td><span class="tag tag-edu">${x(d.education)}</span></td>`;
+        case 'experience': return `<td><div>${d.experience} năm</div><div class="td-sub">${x(d.company)}</div></td>`;
+        case 'salary':     return `<td style="white-space:nowrap;">${x(d.salary)}</td>`;
+        case 'health':     return `<td>${htag(d.run_tay,'Run tay')}${htag(d.can_thi,'Cận')}${htag(d.mo_hoi_tay,'Mồ hôi')}</td>`;
+        case 'pandora':    return `<td>
+            ${d.pandora_contact==='Đã liên hệ' ? `<span class="tag tag-yes">Đã liên hệ</span>` : `<span class="tag tag-no">Chưa</span>`}
+            ${d.pandora_contractor==='Có' ? `<br><span class="tag tag-warn" style="margin-top:4px;">Nhà thầu</span>` : ''}
+          </td>`;
+        case 'bank':       return `<td><div style="font-size:0.8rem;">${x(d.bank_name)}</div><div class="td-sub">${x(d.bank_account)}</div></td>`;
+        case 'timestamp':  return `<td class="td-sub" style="white-space:nowrap;">${fmtDate(d.timestamp)}</td>`;
+        case 'actions':    return `<td><button class="btn btn-rose btn-sm" onclick="openDetail('${d.id}')">Xem</button></td>`;
+        default: return '<td>—</td>';
+      }
+    }).join('');
+    const cfCells = visCF.map(f => `<td style="font-size:0.82rem;">${x(cd[f.id])}</td>`).join('');
+    return `<tr>${fixedCells}${cfCells}</tr>`;
+  }).join('');
 }
 
 function htag(v, lbl) {
@@ -690,6 +891,12 @@ async function openDetail(id) {
         ${df('Tên ngân hàng', x(d.bank_name))}
         ${df('Số tài khoản', `<strong>${x(d.bank_account)}</strong>`)}
         ${df('Ngày gửi hồ sơ', fmtDate(d.timestamp))}
+        ${(() => {
+          if (!customFieldDefs.length) return '';
+          const cd = (() => { try { return JSON.parse(d.custom_data || '{}'); } catch { return {}; } })();
+          const items = customFieldDefs.map(f => df(f.label, x(cd[f.id]))).join('');
+          return `<div class="dg-section">Thông tin bổ sung</div>${items}`;
+        })()}
       </div>
       <div style="margin-top:18px;">
         <div style="font-size:0.68rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--rose);padding-bottom:8px;border-bottom:1px solid var(--rose-light);margin-bottom:14px;">Tài liệu đính kèm</div>
@@ -753,23 +960,30 @@ function closeM(id) { document.getElementById(id).classList.remove('open'); }
 function exportXLSX() {
   if (!cache.length) { alert('Chưa có dữ liệu để xuất.'); return; }
 
+  const cfHeaders = customFieldDefs.map(f => f.label);
+
   const headers = [
     'Mã hồ sơ','Họ và tên','Điện thoại','Email','Tuổi','Giới tính','Nơi ở',
     'Số CCCD','Ngày cấp CCCD','Nơi cấp CCCD',
     'Run tay','Cận thị','Mồ hôi tay',
     'Học vấn','Công ty gần nhất','Năm kinh nghiệm','Lương kỳ vọng','Ngày bắt đầu',
     'Pandora đã liên hệ','Đã phỏng vấn','Nhà thầu Pandora',
-    'Tên ngân hàng','Số TK ngân hàng','Ngày gửi hồ sơ'
+    'Tên ngân hàng','Số TK ngân hàng','Ngày gửi hồ sơ',
+    ...cfHeaders
   ];
 
-  const rows = cache.map(d => [
-    d.id, d.fullname, d.phone, d.email, Number(d.age), d.gender, d.address,
-    d.cccd, d.cccd_date, d.cccd_place,
-    d.run_tay, d.can_thi, d.mo_hoi_tay,
-    d.education, d.company, Number(d.experience), d.salary, d.start_date,
-    d.pandora_contact, d.pandora_interview, d.pandora_contractor,
-    d.bank_name, d.bank_account, fmtDate(d.timestamp)
-  ]);
+  const rows = cache.map(d => {
+    const cd = (() => { try { return JSON.parse(d.custom_data || '{}'); } catch { return {}; } })();
+    return [
+      d.id, d.fullname, d.phone, d.email, Number(d.age), d.gender, d.address,
+      d.cccd, d.cccd_date, d.cccd_place,
+      d.run_tay, d.can_thi, d.mo_hoi_tay,
+      d.education, d.company, Number(d.experience), d.salary, d.start_date,
+      d.pandora_contact, d.pandora_interview, d.pandora_contractor,
+      d.bank_name, d.bank_account, fmtDate(d.timestamp),
+      ...customFieldDefs.map(f => cd[f.id] || ''),
+    ];
+  });
 
   const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
   ws['!cols'] = [
@@ -778,7 +992,8 @@ function exportXLSX() {
     {wch:8},{wch:8},{wch:10},
     {wch:10},{wch:24},{wch:8},{wch:14},{wch:12},
     {wch:16},{wch:14},{wch:16},
-    {wch:24},{wch:16},{wch:20}
+    {wch:24},{wch:16},{wch:20},
+    ...customFieldDefs.map(() => ({wch:20})),
   ];
 
   const wb = XLSX.utils.book_new();
@@ -815,6 +1030,89 @@ function renderStats() {
 
 // Overlay click-outside
 document.querySelectorAll('.overlay').forEach(o => o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); }));
+
+// ── Custom fields CRUD ────────────────────────────────
+function renderFieldsTab() {
+  const body = document.getElementById('cf-list-body');
+  if (!customFieldDefs.length) {
+    body.innerHTML = `<div class="cf-empty">Chưa có trường nào. Nhấn <strong>"＋ Thêm trường mới"</strong> để bắt đầu.</div>`;
+    return;
+  }
+  const typeLabel = { text:'Văn bản', textarea:'Đoạn văn', number:'Số', date:'Ngày', select:'Danh sách', radio:'Chọn một' };
+  body.innerHTML = `<div class="cf-list">` + customFieldDefs.map(f => `
+    <div class="cf-item">
+      <div class="cf-item-drag">⠿</div>
+      <div class="cf-item-info">
+        <div class="cf-item-label">${x(f.label)}</div>
+        <div class="cf-item-meta">
+          <span>${typeLabel[f.type] || f.type}</span>
+          &nbsp;·&nbsp; Thứ tự: ${f.position}
+          &nbsp;·&nbsp;
+          ${f.show_in_form ? '<span class="cf-tag cf-tag-form">Form ĐK</span>' : ''}
+          ${f.show_in_supplement ? '<span class="cf-tag cf-tag-supp">Form bổ sung</span>' : ''}
+          ${f.required ? '<span class="cf-tag cf-tag-req">Bắt buộc</span>' : ''}
+        </div>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="openFieldModal(${JSON.stringify(f).replace(/"/g,'&quot;')})">Sửa</button>
+      <button class="btn btn-ghost btn-sm" onclick="deleteField('${f.id}','${x(f.label)}')">Xóa</button>
+    </div>`).join('') + `</div>`;
+}
+
+function toggleOptions() {
+  const t = document.getElementById('mf-type').value;
+  document.getElementById('mf-options-wrap').style.display = (t==='select'||t==='radio') ? 'block' : 'none';
+}
+
+function openFieldModal(f = null) {
+  document.getElementById('mf-id').value   = f ? f.id : '';
+  document.getElementById('mf-title').textContent = f ? 'Chỉnh sửa trường' : 'Thêm trường tuỳ chỉnh';
+  document.getElementById('mf-label').value = f ? f.label : '';
+  document.getElementById('mf-type').value  = f ? f.type  : 'text';
+  document.getElementById('mf-options').value = f ? (f.options || '') : '';
+  document.getElementById('mf-pos').value   = f ? f.position : 999;
+  document.getElementById('mf-form').checked = f ? !!f.show_in_form : true;
+  document.getElementById('mf-supp').checked = f ? !!f.show_in_supplement : false;
+  document.getElementById('mf-req').checked  = f ? !!f.required : false;
+  toggleOptions();
+  document.getElementById('m-field').classList.add('open');
+  setTimeout(() => document.getElementById('mf-label').focus(), 80);
+}
+
+async function saveField() {
+  const label = document.getElementById('mf-label').value.trim();
+  if (!label) { document.getElementById('mf-label').focus(); return; }
+  const id = document.getElementById('mf-id').value;
+  const body = {
+    label,
+    type:             document.getElementById('mf-type').value,
+    options:          document.getElementById('mf-options').value.trim(),
+    position:         Number(document.getElementById('mf-pos').value) || 999,
+    showInForm:       document.getElementById('mf-form').checked,
+    showInSupplement: document.getElementById('mf-supp').checked,
+    required:         document.getElementById('mf-req').checked,
+  };
+  try {
+    const res = id
+      ? await fetch('/api/fields/' + id, { method:'PUT', headers:{'Content-Type':'application/json','X-Admin-Key':adminKey}, body:JSON.stringify(body) })
+      : await fetch('/api/fields',        { method:'POST',headers:{'Content-Type':'application/json','X-Admin-Key':adminKey}, body:JSON.stringify(body) });
+    const json = await res.json();
+    if (!json.ok && !json.id) throw new Error(JSON.stringify(json));
+    closeM('m-field');
+    await reload();
+    renderFieldsTab();
+    buildColPanel();
+  } catch (e) { alert('Lỗi lưu trường: ' + e.message); }
+}
+
+async function deleteField(id, label) {
+  if (!confirm(`Xóa trường "${label}"? Dữ liệu đã nhập sẽ vẫn còn trong DB nhưng sẽ không hiển thị nữa.`)) return;
+  try {
+    await fetch('/api/fields/' + id, { method:'DELETE', headers:{'X-Admin-Key':adminKey} });
+    await reload();
+    renderFieldsTab();
+    buildColPanel();
+  } catch (e) { alert('Lỗi xóa: ' + e.message); }
+}
 </script>
 </body>
 </html>
