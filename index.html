@@ -752,90 +752,10 @@
         </div>
       </div>
 
-      <!-- 6. Ngân hàng -->
+      <!-- 6. Tài liệu -->
       <div class="section">
         <div class="section-head">
           <div class="section-num">6</div>
-          <div class="section-title">Thông tin ngân hàng</div>
-        </div>
-        <div class="section-body">
-          <div class="notice" style="margin-bottom:16px;font-size:0.78rem;">Số tài khoản chỉ dùng để xử lý thanh toán lương, được bảo mật tuyệt đối.</div>
-          <div class="field">
-            <label class="field-label">Tên ngân hàng <span class="req">*</span></label>
-            <select id="bank-name">
-              <option value="">— Chọn ngân hàng —</option>
-              <optgroup label="Ngân hàng Nhà nước &amp; Quốc doanh">
-                <option>Agribank – Ngân hàng Nông nghiệp và PTNT</option>
-                <option>BIDV – Ngân hàng Đầu tư và Phát triển VN</option>
-                <option>VietinBank – Ngân hàng Công Thương VN</option>
-                <option>Vietcombank – Ngân hàng Ngoại Thương VN</option>
-              </optgroup>
-              <optgroup label="Ngân hàng TMCP lớn">
-                <option>ACB – Ngân hàng Á Châu</option>
-                <option>HD Bank – Ngân hàng Phát triển TP.HCM</option>
-                <option>MB Bank – Ngân hàng Quân Đội</option>
-                <option>MSB – Ngân hàng Hàng Hải</option>
-                <option>OCB – Ngân hàng Phương Đông</option>
-                <option>Sacombank – Ngân hàng Sài Gòn Thương Tín</option>
-                <option>SCB – Ngân hàng Sài Gòn</option>
-                <option>SHB – Ngân hàng Sài Gòn – Hà Nội</option>
-                <option>Techcombank – Ngân hàng Kỹ Thương VN</option>
-                <option>TPBank – Ngân hàng Tiên Phong</option>
-                <option>VIB – Ngân hàng Quốc Tế VN</option>
-                <option>VPBank – Ngân hàng Việt Nam Thịnh Vượng</option>
-              </optgroup>
-              <optgroup label="Ngân hàng TMCP khác">
-                <option>ABBank – Ngân hàng An Bình</option>
-                <option>BacABank – Ngân hàng Bắc Á</option>
-                <option>BaoViet Bank – Ngân hàng Bảo Việt</option>
-                <option>BVBank – Ngân hàng Bản Việt</option>
-                <option>CBBank – Ngân hàng Xây Dựng</option>
-                <option>DongABank – Ngân hàng Đông Á</option>
-                <option>Eximbank – Ngân hàng Xuất Nhập Khẩu VN</option>
-                <option>GPBank – Ngân hàng Dầu Khí Toàn Cầu</option>
-                <option>KienLongBank – Ngân hàng Kiên Long</option>
-                <option>LPBank – Ngân hàng Lộc Phát (LienVietPostBank)</option>
-                <option>Nam A Bank – Ngân hàng Nam Á</option>
-                <option>NamViet Bank – Ngân hàng Nam Việt</option>
-                <option>NCB – Ngân hàng Quốc Dân</option>
-                <option>OceanBank – Ngân hàng Đại Dương</option>
-                <option>PGBank – Ngân hàng Xăng Dầu Petrolimex</option>
-                <option>PVcomBank – Ngân hàng Đại Chúng VN</option>
-                <option>SeABank – Ngân hàng Đông Nam Á</option>
-                <option>VietBank – Ngân hàng Việt Nam Thương Tín</option>
-                <option>VietCapitalBank – Ngân hàng Bản Việt</option>
-              </optgroup>
-              <optgroup label="Ngân hàng số / Fintech">
-                <option>Cake by VPBank</option>
-                <option>MoMo (Ví điện tử)</option>
-                <option>Timo by Ban Viet Bank</option>
-                <option>Tpbank QuickPay</option>
-                <option>TNEX by MSB</option>
-                <option>Ubank by VPBank</option>
-              </optgroup>
-              <optgroup label="Ngân hàng nước ngoài tại VN">
-                <option>Citibank Việt Nam</option>
-                <option>HSBC Việt Nam</option>
-                <option>Shinhan Bank Việt Nam</option>
-                <option>Standard Chartered Việt Nam</option>
-                <option>Woori Bank Việt Nam</option>
-              </optgroup>
-              <option value="Khác">Khác</option>
-            </select>
-            <div class="field-err" id="e-bank-name">Vui lòng chọn ngân hàng</div>
-          </div>
-          <div class="field">
-            <label class="field-label">Số tài khoản ngân hàng <span class="req">*</span></label>
-            <input type="text" id="bank-account" placeholder="0123456789" maxlength="20">
-            <div class="field-err" id="e-bank-account">Vui lòng nhập số tài khoản</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 7. Tài liệu -->
-      <div class="section">
-        <div class="section-head">
-          <div class="section-num">7</div>
           <div class="section-title">Tài liệu đính kèm</div>
         </div>
         <div class="section-body">
@@ -870,28 +790,13 @@
             <div class="field-err" id="e-f-cccd-back">Vui lòng đính kèm ảnh mặt sau CCCD</div>
           </div>
 
-          <div class="field">
-            <label class="field-label">Ảnh số tài khoản ngân hàng <span class="req">*</span> <span class="hint">Sổ TK hoặc app ngân hàng</span></label>
-            <div class="upload-wrap" id="uw-bank">
-              <input type="file" id="f-bank" accept="image/*" onchange="onFile(this,'pv-bank','pv-bank-img','uw-bank')">
-              <div class="upload-icon">🏦</div>
-              <div class="upload-label"><strong>Chọn ảnh</strong> hoặc kéo thả vào đây</div>
-              <div class="upload-sub">JPG · PNG · HEIC — Tối đa 5 MB</div>
-            </div>
-            <div class="preview-box" id="pv-bank">
-              <img id="pv-bank-img" src="" alt="Bank">
-              <button type="button" class="preview-remove" onclick="rmFile('f-bank','pv-bank','uw-bank')">✕</button>
-            </div>
-            <div class="field-err" id="e-f-bank">Vui lòng đính kèm ảnh số tài khoản</div>
-          </div>
-
         </div>
       </div>
 
-      <!-- 8. Custom fields (dynamic) -->
+      <!-- 7. Custom fields (dynamic) -->
       <div class="section" id="custom-section" style="display:none;">
         <div class="section-head">
-          <div class="section-num">8</div>
+          <div class="section-num">7</div>
           <div class="section-title">Thông tin bổ sung</div>
         </div>
         <div class="section-body" id="custom-fields-body">
@@ -1106,8 +1011,6 @@ function validate() {
     ['experience','e-experience', v=>v!==''&&v>=0],
     ['salary','e-salary', v=>v.trim().length>=1],
     ['start-date','e-start-date', v=>!!v],
-    ['bank-name','e-bank-name', v=>!!v],
-    ['bank-account','e-bank-account', v=>v.trim().length>=6],
   ];
   txt.forEach(([f,e,t]) => { if(setErr(f,e,!t(document.getElementById(f).value||''))) ok=false; });
 
@@ -1119,19 +1022,18 @@ function validate() {
   }
   if(!imgs['f-cccd-front']) { showE('e-f-cccd-front'); ok=false; } else hideE('e-f-cccd-front');
   if(!imgs['f-cccd-back'])  { showE('e-f-cccd-back');  ok=false; } else hideE('e-f-cccd-back');
-  if(!imgs['f-bank']) { showE('e-f-bank'); ok=false; } else hideE('e-f-bank');
   if(!validateCustomFields()) ok=false;
   if(!document.getElementById('consent').checked) { showE('e-consent'); ok=false; } else hideE('e-consent');
   return ok;
 }
 
 function prog() {
-  const fs=['fullname','phone','email','age','address','cccd','cccd-date','cccd-place','education','company','experience','salary','start-date','bank-name','bank-account'];
+  const fs=['fullname','phone','email','age','address','cccd','cccd-date','cccd-place','education','company','experience','salary','start-date'];
   const rs=['gender','run-tay','can','mohoitay','pdcontact','pdcontractor'];
-  let n=0, tot=fs.length+rs.length+3;
+  let n=0, tot=fs.length+rs.length+2;
   fs.forEach(id => { const v=(document.getElementById(id)||{}).value; if(v&&v.trim()) n++; });
   rs.forEach(nm => { if(rv(nm)) n++; });
-  if(imgs['f-cccd-front']) n++; if(imgs['f-cccd-back']) n++; if(imgs['f-bank']) n++;
+  if(imgs['f-cccd-front']) n++; if(imgs['f-cccd-back']) n++;
   document.getElementById('prog-bar').style.width = Math.round(n/tot*100)+'%';
 }
 document.querySelectorAll('input,select,textarea').forEach(el => { el.addEventListener('input',prog); el.addEventListener('change',prog); });
@@ -1164,11 +1066,11 @@ document.getElementById('main-form').addEventListener('submit', async e => {
     pandoraContact:   rv('pdcontact'),
     pandoraInterview: rv('pdinterview') || 'N/A',
     pandoraContractor:rv('pdcontractor'),
-    bankName:         document.getElementById('bank-name').value,
-    bankAccount:      document.getElementById('bank-account').value.trim(),
+    bankName:         '',
+    bankAccount:      '',
     cccdPhoto:        imgs['f-cccd-front'] || '',
     cccdPhotoBack:    imgs['f-cccd-back']  || '',
-    bankPhoto:        imgs['f-bank'] || '',
+    bankPhoto:        '',
     customData:       collectCustomData(),
   };
 
