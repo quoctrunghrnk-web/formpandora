@@ -609,19 +609,6 @@
             <div class="field-err" id="e-cccd">Số CCCD phải có 9 – 12 chữ số</div>
           </div>
 
-          <div class="row">
-            <div class="field">
-              <label class="field-label">Ngày cấp <span class="req">*</span></label>
-              <input type="date" id="cccd-date">
-              <div class="field-err" id="e-cccd-date">Vui lòng chọn ngày cấp</div>
-            </div>
-            <div class="field">
-              <label class="field-label">Nơi cấp <span class="req">*</span></label>
-              <input type="text" id="cccd-place" placeholder="Cục CSQL HKTT và DLQG về dân cư">
-              <div class="field-err" id="e-cccd-place">Vui lòng nhập nơi cấp</div>
-            </div>
-          </div>
-
         </div>
       </div>
 
@@ -1004,8 +991,7 @@ function validate() {
     ['age','e-age', v=>v>=16&&v<=60],
     ['address','e-address', v=>v.trim().length>=5],
     ['cccd','e-cccd', v=>/^\d{9,12}$/.test(v.trim())],
-    ['cccd-date','e-cccd-date', v=>!!v],
-    ['cccd-place','e-cccd-place', v=>v.trim().length>=3],
+
     ['education','e-education', v=>!!v],
     ['company','e-company', v=>v.trim().length>=1],
     ['experience','e-experience', v=>v!==''&&v>=0],
@@ -1028,7 +1014,7 @@ function validate() {
 }
 
 function prog() {
-  const fs=['fullname','phone','email','age','address','cccd','cccd-date','cccd-place','education','company','experience','salary','start-date'];
+  const fs=['fullname','phone','email','age','address','cccd','education','company','experience','salary','start-date'];
   const rs=['gender','run-tay','can','mohoitay','pdcontact','pdcontractor'];
   let n=0, tot=fs.length+rs.length+2;
   fs.forEach(id => { const v=(document.getElementById(id)||{}).value; if(v&&v.trim()) n++; });
@@ -1053,8 +1039,8 @@ document.getElementById('main-form').addEventListener('submit', async e => {
     gender:           rv('gender'),
     address:          document.getElementById('address').value.trim(),
     cccd:             document.getElementById('cccd').value.trim(),
-    cccdDate:         document.getElementById('cccd-date').value,
-    cccdPlace:        document.getElementById('cccd-place').value.trim(),
+    cccdDate:         '',
+    cccdPlace:        '',
     runTay:           rv('run-tay'),
     can:              rv('can'),
     moHoiTay:         rv('mohoitay'),
