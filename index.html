@@ -563,7 +563,7 @@
               <div class="field-err" id="e-phone">Số điện thoại không hợp lệ</div>
             </div>
             <div class="field">
-              <label class="field-label">Email <span class="req">*</span></label>
+              <label class="field-label">Email <span class="hint">Không bắt buộc</span></label>
               <input type="email" id="email" placeholder="email@example.com">
               <div class="field-err" id="e-email">Email không hợp lệ</div>
             </div>
@@ -987,7 +987,7 @@ function validate() {
   const txt = [
     ['fullname','e-fullname', v=>v.trim().length>=2],
     ['phone','e-phone', v=>/^[0-9]{9,11}$/.test(v.replace(/\s/g,''))],
-    ['email','e-email', v=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)],
+    ['email','e-email', v=>v===''||/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)],
     ['age','e-age', v=>v>=16&&v<=60],
     ['address','e-address', v=>v.trim().length>=5],
     ['cccd','e-cccd', v=>/^\d{9,12}$/.test(v.trim())],
@@ -1014,7 +1014,7 @@ function validate() {
 }
 
 function prog() {
-  const fs=['fullname','phone','email','age','address','cccd','education','company','experience','salary','start-date'];
+  const fs=['fullname','phone','age','address','cccd','education','company','experience','salary','start-date'];
   const rs=['gender','run-tay','can','mohoitay','pdcontact','pdcontractor'];
   let n=0, tot=fs.length+rs.length+2;
   fs.forEach(id => { const v=(document.getElementById(id)||{}).value; if(v&&v.trim()) n++; });
