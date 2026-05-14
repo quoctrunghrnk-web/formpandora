@@ -1334,6 +1334,12 @@ function renderStats() {
   const noCan   = cntF(r => r.can_thi    !== 'Có');
   const noMohoi = cntF(r => r.mo_hoi_tay !== 'Có');
   const all3ok  = cntF(r => r.run_tay !== 'Có' && r.can_thi !== 'Có' && r.mo_hoi_tay !== 'Có');
+  const validEdu = ['Cấp 2','Cấp 3','Trung cấp','Cao đẳng','Đại học'];
+  const qualified = cntF(r =>
+    r.run_tay !== 'Có' && r.can_thi !== 'Có' && r.mo_hoi_tay !== 'Có' &&
+    Number(r.age) >= 19 && Number(r.age) <= 45 &&
+    validEdu.includes(r.education)
+  );
   const hasRun  = cnt('run_tay',    'Có');
   const hasCan  = cnt('can_thi',    'Có');
   const hasMohoi= cnt('mo_hoi_tay', 'Có');
@@ -1373,10 +1379,10 @@ function renderStats() {
       <div class="stats-hl-num rose">${n}</div>
       <div class="stats-hl-lbl">Tổng hồ sơ</div>
     </div>
-    <div class="stats-hl">
-      <div class="stats-hl-num">${todayCnt}</div>
-      <div class="stats-hl-lbl">Hôm nay</div>
-      <div class="stats-hl-pct">${week7} trong 7 ngày qua</div>
+    <div class="stats-hl" style="border-color:#b8d9b8;background:linear-gradient(135deg,#f4fbf4,#e8f5e8);">
+      <div class="stats-hl-num green">${qualified}</div>
+      <div class="stats-hl-lbl" style="color:#2d6e3a;">Đủ tiêu chuẩn tuyển</div>
+      <div class="stats-hl-pct" style="color:#5a8a5a;">${pct(qualified)}% tổng hồ sơ</div>
     </div>
     <div class="stats-hl">
       <div class="stats-hl-num">${avgAge}</div>
@@ -1385,6 +1391,23 @@ function renderStats() {
     <div class="stats-hl">
       <div class="stats-hl-num">${avgExp}</div>
       <div class="stats-hl-lbl">Năm KN trung bình</div>
+    </div>
+  </div>
+
+  <!-- Ứng viên đủ tiêu chuẩn -->
+  <div class="stats-card">
+    <div class="stats-card-head"><span>⭐</span><span class="stats-card-title">Ứng viên đủ tiêu chuẩn tuyển dụng</span></div>
+    <div class="stats-health-hero">
+      <div class="stats-health-num">${qualified}</div>
+      <div>
+        <div class="stats-health-label">Đáp ứng đồng thời tất cả điều kiện</div>
+        <div class="stats-health-sub" style="margin-top:6px;line-height:1.8;">
+          ✅ Không run tay · Không cận thị · Không mồ hôi tay<br>
+          ✅ Tuổi từ 19 – 45<br>
+          ✅ Trình độ từ Cấp 2 trở lên (không tính "Khác")
+        </div>
+        <div style="margin-top:8px;font-size:0.78rem;color:#2d5a2d;font-weight:600;">${pct(qualified)}% trong tổng ${n} hồ sơ</div>
+      </div>
     </div>
   </div>
 
