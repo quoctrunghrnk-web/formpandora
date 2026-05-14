@@ -778,7 +778,6 @@
                 </div>
               </div>
               <button class="btn btn-outline btn-sm" onclick="exportXLSX()">⬇ Xuất Excel</button>
-              <button class="btn btn-ghost btn-sm" id="del-all-btn" onclick="confirmDelAll()" style="display:none;">🗑 Xóa tất cả</button>
             </div>
           </div>
           <div class="filter-bar">
@@ -854,7 +853,6 @@
     </div>
     <div class="modal-body" id="m-body"></div>
     <div class="modal-foot">
-      <button class="btn btn-danger btn-sm" id="m-del-btn">Xóa hồ sơ này</button>
       <button class="btn btn-outline btn-sm" onclick="closeM('m-detail')">Đóng</button>
     </div>
   </div>
@@ -875,22 +873,6 @@
   </div>
 </div>
 
-<!-- Modal: Xác nhận -->
-<div class="overlay" id="m-confirm">
-  <div class="modal" style="max-width:400px;">
-    <div class="modal-head">
-      <div class="modal-head-title">Xác nhận xóa</div>
-      <button class="modal-close" onclick="closeM('m-confirm')">✕</button>
-    </div>
-    <div class="modal-body">
-      <p class="confirm-text" id="confirm-txt"></p>
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost btn-sm" onclick="closeM('m-confirm')">Hủy</button>
-      <button class="btn btn-danger btn-sm" id="confirm-ok">Xác nhận xóa</button>
-    </div>
-  </div>
-</div>
 
 <script>
 // ── Auth & data ───────────────────────────────────────
@@ -1008,11 +990,6 @@ async function apiGet(path) {
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
-async function apiDelete(path) {
-  const res = await fetch('/api' + path, { method: 'DELETE', headers: { 'X-Admin-Key': adminKey } });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
-}
 
 // ── Reload ────────────────────────────────────────────
 async function reload() {
@@ -1046,7 +1023,6 @@ function updateMini(d) {
   document.getElementById('s2').textContent = d.filter(r => r.education==='Đại học').length;
   document.getElementById('s3').textContent = d.filter(r => r.pandora_contact==='Đã liên hệ').length;
   document.getElementById('total-pill').textContent = d.length + ' hồ sơ';
-  document.getElementById('del-all-btn').style.display = d.length ? 'inline-flex' : 'none';
 }
 
 // ── Table ─────────────────────────────────────────────
@@ -1198,7 +1174,6 @@ async function openDetail(id) {
           </div>
         </div>
       </div>`;
-    document.getElementById('m-del-btn').onclick = () => confirmDel(id, d.fullname);
   } catch (e) {
     document.getElementById('m-body').innerHTML = `<p style="color:var(--danger);padding:20px;">Lỗi: ${e.message}</p>`;
   }
@@ -1212,30 +1187,6 @@ function badge(v) {
   return v==='Có' ? `<span class="tag tag-no">✕ Có</span>` : `<span class="tag tag-yes">✓ Không</span>`;
 }
 
-// ── Delete ────────────────────────────────────────────
-function confirmDel(id, name) {
-  document.getElementById('confirm-txt').textContent = `Xóa hồ sơ của "${name || id}"? Thao tác này không thể hoàn tác.`;
-  document.getElementById('confirm-ok').onclick = async () => {
-    try {
-      await apiDelete('/submissions/' + id);
-      closeM('m-confirm'); closeM('m-detail');
-      await reload();
-    } catch (e) { alert('Lỗi xóa: ' + e.message); }
-  };
-  document.getElementById('m-confirm').classList.add('open');
-}
-
-function confirmDelAll() {
-  document.getElementById('confirm-txt').textContent = 'Xóa TẤT CẢ hồ sơ? Thao tác này KHÔNG THỂ hoàn tác!';
-  document.getElementById('confirm-ok').onclick = async () => {
-    try {
-      await apiDelete('/submissions');
-      closeM('m-confirm');
-      await reload();
-    } catch (e) { alert('Lỗi: ' + e.message); }
-  };
-  document.getElementById('m-confirm').classList.add('open');
-}
 
 function closeM(id) { document.getElementById(id).classList.remove('open'); }
 
