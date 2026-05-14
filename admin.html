@@ -291,15 +291,81 @@
   /* Confirm modal */
   .confirm-text { font-size: 0.88rem; line-height: 1.7; color: var(--text); padding: 4px 0 12px; }
 
-  /* Stats tab */
-  .stats-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
-  .stats-table tr { border-bottom: 1px solid var(--border); }
+  /* ── Stats tab ── */
+  .stats-wrap { display: flex; flex-direction: column; gap: 18px; }
+
+  /* Highlight row at top */
+  .stats-hl-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
+  .stats-hl {
+    background: var(--white); border: 1px solid var(--border); border-radius: 10px;
+    padding: 16px 18px; box-shadow: var(--shadow); text-align: center;
+  }
+  .stats-hl-num {
+    font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 700;
+    color: var(--charcoal); line-height: 1;
+  }
+  .stats-hl-num.green { color: var(--success); }
+  .stats-hl-num.rose  { color: var(--rose); }
+  .stats-hl-lbl { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-top: 5px; }
+  .stats-hl-pct { font-size: 0.75rem; color: var(--rose-dark); font-weight: 500; margin-top: 2px; }
+
+  /* Section cards */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .stats-card {
+    background: var(--white); border: 1px solid var(--border); border-radius: 10px;
+    overflow: hidden; box-shadow: var(--shadow);
+  }
+  .stats-card-head {
+    padding: 11px 18px; border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg,#fffafa,#fdf0f2);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .stats-card-title { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--rose-dark); }
+
+  /* Big health callout */
+  .stats-health-hero {
+    margin: 16px 18px 10px;
+    background: linear-gradient(135deg, #edf5ed, #d4ead4);
+    border: 1px solid #b8d9b8; border-radius: 10px;
+    padding: 16px 20px; display: flex; align-items: center; gap: 16px;
+  }
+  .stats-health-num {
+    font-family: 'Cormorant Garamond', serif; font-size: 2.8rem; font-weight: 700;
+    color: var(--success); line-height: 1; flex-shrink: 0;
+  }
+  .stats-health-label { font-size: 0.84rem; color: #2d5a2d; font-weight: 500; line-height: 1.4; }
+  .stats-health-sub { font-size: 0.72rem; color: #5a8a5a; margin-top: 3px; }
+
+  /* Row table inside cards */
+  .stats-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  .stats-table tr { border-bottom: 1px solid #f2eaec; }
   .stats-table tr:last-child { border-bottom: none; }
-  .stats-table td { padding: 12px 16px; }
-  .stats-table td:first-child { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; width: 200px; }
-  .stats-table td:last-child { font-weight: 500; color: var(--charcoal); }
+  .stats-table td { padding: 10px 18px; vertical-align: middle; }
+  .stats-table td:first-child { color: var(--muted); font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.07em; }
+  .stats-table td:last-child { font-weight: 500; color: var(--charcoal); text-align: right; }
+  .stats-table .stats-num { font-size: 1rem; }
+
   .stat-bar-wrap { height: 5px; background: var(--rose-light); border-radius: 3px; margin-top: 5px; overflow: hidden; }
-  .stat-bar { height: 100%; background: var(--rose); border-radius: 3px; transition: width 0.4s; }
+  .stat-bar { height: 100%; background: var(--rose); border-radius: 3px; transition: width 0.5s ease; }
+  .stat-bar.green { background: var(--success); }
+  .stat-bar.blue  { background: #4a90d9; }
+
+  /* Tag badges inside stats */
+  .stats-badge {
+    display: inline-block; padding: 2px 9px; border-radius: 50px;
+    font-size: 0.7rem; font-weight: 500;
+  }
+  .stats-badge-green { background: #edf5ed; color: #2d6e3a; }
+  .stats-badge-red   { background: #fceef0; color: #8b3a3e; }
+
+  @media (max-width: 900px) {
+    .stats-hl-row { grid-template-columns: repeat(2,1fr); }
+    .stats-grid   { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 480px) {
+    .stats-hl-row { grid-template-columns: repeat(2,1fr); gap: 8px; }
+    .stats-hl-num { font-size: 1.6rem; }
+  }
 
   /* ── Column toggle dropdown ── */
   .col-toggle-wrap { position: relative; }
@@ -1238,28 +1304,187 @@ function exportXLSX() {
 // ── Stats tab ─────────────────────────────────────────
 function renderStats() {
   const d = cache;
-  if (!d.length) { document.getElementById('stats-body').innerHTML='<em style="color:var(--muted)">Chưa có dữ liệu.</em>'; return; }
+  if (!d.length) {
+    document.getElementById('stats-body').innerHTML = '<em style="color:var(--muted);padding:20px;display:block;">Chưa có dữ liệu.</em>';
+    return;
+  }
   const n = d.length;
-  const cnt = (key,val) => d.filter(r=>r[key]===val).length;
-  const pct = v => Math.round(v/n*100);
-  const avgAge = (d.reduce((s,r)=>s+Number(r.age||0),0)/n).toFixed(1);
-  const avgExp = (d.reduce((s,r)=>s+Number(r.experience||0),0)/n).toFixed(1);
-  const bar = v => `<div class="stat-bar-wrap"><div class="stat-bar" style="width:${pct(v)}%"></div></div>`;
-  const edu = ['Cấp 2','Cấp 3','Trung cấp','Cao đẳng','Đại học','Khác']
-    .map(e=>`${e}: ${cnt('education',e)} (${pct(cnt('education',e))}%)`).join('  ·  ');
-  document.getElementById('stats-body').innerHTML = `
+
+  // ── Helpers ──
+  const cnt  = (key, val) => d.filter(r => r[key] === val).length;
+  const cntF = fn         => d.filter(fn).length;
+  const pct  = v          => n > 0 ? Math.round(v / n * 100) : 0;
+  const bar  = (v, cls)   => `<div class="stat-bar-wrap"><div class="stat-bar${cls?' '+cls:''}" style="width:${pct(v)}%"></div></div>`;
+  const row  = (lbl, v, extra, barCls) => `
+    <tr>
+      <td>${lbl}</td>
+      <td><span class="stats-num">${v}</span> <span style="color:var(--muted);font-size:0.78rem;font-weight:400;">(${pct(v)}%)</span>${extra||''}${bar(v,barCls)}</td>
+    </tr>`;
+
+  // ── Tổng quan ──
+  const today   = new Date().toDateString();
+  const todayCnt= cntF(r => new Date(r.timestamp).toDateString() === today);
+  const week7   = cntF(r => Date.now() - new Date(r.timestamp) <= 7*864e5);
+  const month30 = cntF(r => Date.now() - new Date(r.timestamp) <= 30*864e5);
+  const avgAge  = (d.reduce((s,r) => s + Number(r.age||0), 0) / n).toFixed(1);
+  const avgExp  = (d.reduce((s,r) => s + Number(r.experience||0), 0) / n).toFixed(1);
+
+  // ── Sức khoẻ ──
+  const noRun   = cntF(r => r.run_tay    !== 'Có');
+  const noCan   = cntF(r => r.can_thi    !== 'Có');
+  const noMohoi = cntF(r => r.mo_hoi_tay !== 'Có');
+  const all3ok  = cntF(r => r.run_tay !== 'Có' && r.can_thi !== 'Có' && r.mo_hoi_tay !== 'Có');
+  const hasRun  = cnt('run_tay',    'Có');
+  const hasCan  = cnt('can_thi',    'Có');
+  const hasMohoi= cnt('mo_hoi_tay', 'Có');
+  const has2plus= cntF(r => [r.run_tay,r.can_thi,r.mo_hoi_tay].filter(v=>v==='Có').length >= 2);
+
+  // ── Nhân khẩu học ──
+  const gNam  = cnt('gender','Nam');
+  const gNu   = cnt('gender','Nữ');
+  const gKhac = cnt('gender','Khác');
+  const age1  = cntF(r => Number(r.age) < 25);
+  const age2  = cntF(r => Number(r.age) >= 25 && Number(r.age) < 30);
+  const age3  = cntF(r => Number(r.age) >= 30 && Number(r.age) < 35);
+  const age4  = cntF(r => Number(r.age) >= 35);
+
+  // ── Học vấn & Kinh nghiệm ──
+  const eduRows = ['Cấp 2','Cấp 3','Trung cấp','Cao đẳng','Đại học','Khác']
+    .map(e => row(e, cnt('education',e))).join('');
+  const exp0 = cntF(r => Number(r.experience) === 0);
+  const exp1 = cntF(r => Number(r.experience) >= 1 && Number(r.experience) < 3);
+  const exp3 = cntF(r => Number(r.experience) >= 3 && Number(r.experience) < 6);
+  const exp6 = cntF(r => Number(r.experience) >= 6);
+
+  // ── Pandora ──
+  const pandoraMoi    = cntF(r => r.pandora_contact !== 'Đã liên hệ');
+  const pandoraLienHe = cnt('pandora_contact',  'Đã liên hệ');
+  const pandoraPV     = cnt('pandora_interview', 'Đã phỏng vấn');
+  const nhaThau       = cnt('pandora_contractor','Có');
+
+  // ── Mức độ hoàn thiện hồ sơ ──
+  const coNganHang = cntF(r => !!(r.bank_name && r.bank_account));
+
+  document.getElementById('stats-body').innerHTML = `<div class="stats-wrap">
+
+  <!-- Highlight row -->
+  <div class="stats-hl-row">
+    <div class="stats-hl">
+      <div class="stats-hl-num rose">${n}</div>
+      <div class="stats-hl-lbl">Tổng hồ sơ</div>
+    </div>
+    <div class="stats-hl">
+      <div class="stats-hl-num">${todayCnt}</div>
+      <div class="stats-hl-lbl">Hôm nay</div>
+      <div class="stats-hl-pct">${week7} trong 7 ngày qua</div>
+    </div>
+    <div class="stats-hl">
+      <div class="stats-hl-num">${avgAge}</div>
+      <div class="stats-hl-lbl">Tuổi trung bình</div>
+    </div>
+    <div class="stats-hl">
+      <div class="stats-hl-num">${avgExp}</div>
+      <div class="stats-hl-lbl">Năm KN trung bình</div>
+    </div>
+  </div>
+
+  <!-- Sức khoẻ -->
+  <div class="stats-card">
+    <div class="stats-card-head">
+      <span>💊</span>
+      <span class="stats-card-title">Tiêu chuẩn sức khoẻ</span>
+    </div>
+    <div class="stats-health-hero">
+      <div class="stats-health-num">${all3ok}</div>
+      <div>
+        <div class="stats-health-label">✅ Đáp ứng đủ 3 điều kiện</div>
+        <div class="stats-health-sub">Không run tay · Không cận · Không mồ hôi tay · ${pct(all3ok)}% tổng hồ sơ</div>
+      </div>
+    </div>
     <table class="stats-table">
-      <tr><td>Tổng hồ sơ</td><td><strong style="font-size:1.3rem;font-family:'Cormorant Garamond',serif;">${n}</strong></td></tr>
-      <tr><td>Tuổi trung bình</td><td>${avgAge} tuổi</td></tr>
-      <tr><td>Kinh nghiệm TB</td><td>${avgExp} năm</td></tr>
-      <tr><td>Nam / Nữ / Khác</td><td>${cnt('gender','Nam')} / ${cnt('gender','Nữ')} / ${cnt('gender','Khác')}${bar(cnt('gender','Nữ'))}</td></tr>
-      <tr><td>Trình độ học vấn</td><td style="font-size:0.78rem;">${edu}</td></tr>
-      <tr><td>Run tay – Có</td><td>${cnt('run_tay','Có')} / ${n} (${pct(cnt('run_tay','Có'))}%)${bar(cnt('run_tay','Có'))}</td></tr>
-      <tr><td>Cận thị – Có</td><td>${cnt('can_thi','Có')} / ${n} (${pct(cnt('can_thi','Có'))}%)${bar(cnt('can_thi','Có'))}</td></tr>
-      <tr><td>Mồ hôi tay – Có</td><td>${cnt('mo_hoi_tay','Có')} / ${n} (${pct(cnt('mo_hoi_tay','Có'))}%)${bar(cnt('mo_hoi_tay','Có'))}</td></tr>
-      <tr><td>Đã được Pandora liên hệ</td><td>${cnt('pandora_contact','Đã liên hệ')} / ${n} (${pct(cnt('pandora_contact','Đã liên hệ'))}%)${bar(cnt('pandora_contact','Đã liên hệ'))}</td></tr>
-      <tr><td>Đang làm nhà thầu</td><td>${cnt('pandora_contractor','Có')} / ${n}${bar(cnt('pandora_contractor','Có'))}</td></tr>
-    </table>`;
+      ${row('Không run tay', noRun, '', 'green')}
+      ${row('Không cận thị', noCan, '', 'green')}
+      ${row('Không mồ hôi tay', noMohoi, '', 'green')}
+      <tr style="border-top:1.5px solid var(--border);">
+        <td style="padding-top:12px;">Có run tay</td>
+        <td><span class="stats-num">${hasRun}</span> <span style="color:var(--muted);font-size:0.78rem;font-weight:400;">(${pct(hasRun)}%)</span>${bar(hasRun)}</td>
+      </tr>
+      <tr>
+        <td>Có cận thị</td>
+        <td><span class="stats-num">${hasCan}</span> <span style="color:var(--muted);font-size:0.78rem;font-weight:400;">(${pct(hasCan)}%)</span>${bar(hasCan)}</td>
+      </tr>
+      <tr>
+        <td>Có mồ hôi tay</td>
+        <td><span class="stats-num">${hasMohoi}</span> <span style="color:var(--muted);font-size:0.78rem;font-weight:400;">(${pct(hasMohoi)}%)</span>${bar(hasMohoi)}</td>
+      </tr>
+      <tr>
+        <td>Có ≥ 2 vấn đề sức khoẻ</td>
+        <td><span class="stats-num">${has2plus}</span> <span style="color:var(--muted);font-size:0.78rem;font-weight:400;">(${pct(has2plus)}%)</span>${bar(has2plus)}</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="stats-grid">
+
+    <!-- Nhân khẩu học -->
+    <div class="stats-card">
+      <div class="stats-card-head"><span>👥</span><span class="stats-card-title">Nhân khẩu học</span></div>
+      <table class="stats-table">
+        ${row('Nam', gNam)}
+        ${row('Nữ', gNu)}
+        ${row('Khác', gKhac)}
+        <tr style="border-top:1.5px solid var(--border);">
+          <td style="padding-top:12px;">Dưới 25 tuổi</td>
+          <td><span class="stats-num">${age1}</span> <span style="color:var(--muted);font-size:0.78rem;font-weight:400;">(${pct(age1)}%)</span>${bar(age1)}</td>
+        </tr>
+        <tr><td>25 – 29 tuổi</td><td><span class="stats-num">${age2}</span> <span style="color:var(--muted);font-size:0.78rem;font-weight:400;">(${pct(age2)}%)</span>${bar(age2)}</td></tr>
+        <tr><td>30 – 34 tuổi</td><td><span class="stats-num">${age3}</span> <span style="color:var(--muted);font-size:0.78rem;font-weight:400;">(${pct(age3)}%)</span>${bar(age3)}</td></tr>
+        <tr><td>Từ 35 tuổi trở lên</td><td><span class="stats-num">${age4}</span> <span style="color:var(--muted);font-size:0.78rem;font-weight:400;">(${pct(age4)}%)</span>${bar(age4)}</td></tr>
+      </table>
+    </div>
+
+    <!-- Học vấn -->
+    <div class="stats-card">
+      <div class="stats-card-head"><span>🎓</span><span class="stats-card-title">Trình độ học vấn</span></div>
+      <table class="stats-table">${eduRows}</table>
+    </div>
+
+    <!-- Kinh nghiệm -->
+    <div class="stats-card">
+      <div class="stats-card-head"><span>💼</span><span class="stats-card-title">Kinh nghiệm làm việc</span></div>
+      <table class="stats-table">
+        ${row('Chưa có kinh nghiệm (0 năm)', exp0)}
+        ${row('1 – 2 năm', exp1)}
+        ${row('3 – 5 năm', exp3)}
+        ${row('Từ 6 năm trở lên', exp6)}
+      </table>
+    </div>
+
+    <!-- Pandora -->
+    <div class="stats-card">
+      <div class="stats-card-head"><span>💍</span><span class="stats-card-title">Quan hệ Pandora</span></div>
+      <table class="stats-table">
+        ${row('Ứng viên mới (chưa từng liên hệ)', pandoraMoi, '', 'green')}
+        ${row('Pandora đã liên hệ', pandoraLienHe)}
+        ${row('Đã phỏng vấn', pandoraPV)}
+        ${row('Đang là nhà thầu', nhaThau)}
+      </table>
+    </div>
+
+  </div>
+
+  <!-- Hồ sơ trong 30 ngày -->
+  <div class="stats-card">
+    <div class="stats-card-head"><span>📅</span><span class="stats-card-title">Hồ sơ theo thời gian</span></div>
+    <table class="stats-table">
+      <tr><td>Hôm nay</td><td><span class="stats-num">${todayCnt}</span>${bar(todayCnt)}</td></tr>
+      <tr><td>7 ngày qua</td><td><span class="stats-num">${week7}</span>${bar(week7)}</td></tr>
+      <tr><td>30 ngày qua</td><td><span class="stats-num">${month30}</span>${bar(month30)}</td></tr>
+      <tr><td>Đã có thông tin ngân hàng</td><td><span class="stats-num">${coNganHang}</span> <span style="color:var(--muted);font-size:0.78rem;font-weight:400;">(${pct(coNganHang)}%)</span>${bar(coNganHang,'green')}</td></tr>
+    </table>
+  </div>
+
+  </div>`;
 }
 
 // Overlay click-outside
