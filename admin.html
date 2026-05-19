@@ -753,11 +753,11 @@
     <div class="login-sub">Quản lý nhân sự</div>
     <div class="lfield">
       <label>Tên đăng nhập</label>
-      <input type="text" id="lu" placeholder="admin" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('lp').focus()">
+      <input type="text" id="lu" placeholder="admin" autocomplete="username">
     </div>
     <div class="lfield">
       <label>Mật khẩu</label>
-      <input type="password" id="lp" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+      <input type="password" id="lp" placeholder="••••••••" autocomplete="current-password">
     </div>
     <div class="lerr" id="lerr">Tên đăng nhập hoặc mật khẩu không đúng.</div>
     <button class="lbtn" onclick="doLogin()">Đăng nhập</button>
@@ -1077,6 +1077,8 @@ async function doLogin() {
     document.getElementById('login-wrap').style.display = 'none';
     document.getElementById('dash').style.display = 'block';
     document.getElementById('uname').textContent = u;
+    document.getElementById('lp').value = '';
+    document.getElementById('lp').classList.remove('bad');
     buildColPanel();
     buildConfirmFilter();
     renderTable();
@@ -1100,9 +1102,17 @@ function doLogout() {
   document.getElementById('lerr').classList.remove('on');
 }
 
-// Enter key trong login
-document.getElementById('lu').addEventListener('keydown', e => { if (e.key==='Enter') document.getElementById('lp').focus(); });
-document.getElementById('lp').addEventListener('keydown', e => { if (e.key==='Enter') doLogin(); });
+// Enter key trong login — chỉ hoạt động khi form login đang hiện
+document.getElementById('lu').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('login-wrap').style.display !== 'none') {
+    document.getElementById('lp').focus();
+  }
+});
+document.getElementById('lp').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('login-wrap').style.display !== 'none') {
+    doLogin();
+  }
+});
 
 // ── API helpers ───────────────────────────────────────
 async function apiGet(path) {
