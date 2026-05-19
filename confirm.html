@@ -346,7 +346,6 @@
           </div>
 
           <button class="btn-rose" id="submit-btn" onclick="doSubmit()">Gửi xác nhận</button>
-          <button class="btn-ghost" onclick="resetToStep1()">← Nhập lại CCCD khác</button>
         </div>
       </div>
     </div>
@@ -510,23 +509,6 @@ async function doSubmit() {
     alert('Gửi thất bại: ' + err.message + '\nVui lòng thử lại.');
     btn.disabled = false; btn.textContent = 'Gửi xác nhận';
   }
-}
-
-// ── Reset về step 1 ───────────────────────────────────
-function resetToStep1() {
-  document.getElementById('view-step2').style.display = 'none';
-  document.getElementById('view-step1').style.display = 'block';
-  document.getElementById('existing-info').style.display = 'none';
-  document.getElementById('reason-wrap').style.display = 'none';
-
-  document.getElementById('step1').classList.add('active');
-  document.getElementById('step1').classList.remove('done');
-  document.getElementById('sc1').textContent = '1';
-  document.getElementById('step2').classList.remove('active');
-
-  document.getElementById('cccd-input').value = '';
-  document.getElementById('reason-input').value = '';
-  document.querySelectorAll('input[name="confirm-status"]').forEach(r => r.checked = false);
 }
 
 // ── Error helpers ─────────────────────────────────────
