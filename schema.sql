@@ -25,5 +25,8 @@ CREATE TABLE IF NOT EXISTS submissions (
   bank_account      TEXT,
   cccd_photo        TEXT,
   cccd_photo_back   TEXT,
-  bank_photo        TEXT
+  bank_photo        TEXT,
+  confirmation_status     TEXT,
+  confirmation_reason     TEXT,
+  confirmation_timestamp  TEXT
 );

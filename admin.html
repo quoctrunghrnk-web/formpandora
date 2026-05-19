@@ -958,6 +958,7 @@ const FIXED_COLS = [
   { key:'health',     label:'Sức khoẻ' },
   { key:'pandora',    label:'Pandora' },
   { key:'bank',       label:'Ngân hàng' },
+  { key:'confirmation', label:'Xác nhận TD' },
   { key:'timestamp',  label:'Ngày gửi' },
   { key:'actions',    label:'',            always:true },
 ];
@@ -1146,6 +1147,7 @@ function renderTable(all) {
             ${d.pandora_contractor==='Có' ? `<br><span class="tag tag-warn" style="margin-top:4px;">Nhà thầu</span>` : ''}
           </td>`;
         case 'bank':       return `<td><div style="font-size:0.8rem;">${x(d.bank_name)}</div><div class="td-sub">${x(d.bank_account)}</div></td>`;
+        case 'confirmation': return `<td>${confirmBadge(d.confirmation_status, d.confirmation_reason)}</td>`;
         case 'timestamp':  return `<td class="td-sub" style="white-space:nowrap;">${fmtDate(d.timestamp)}</td>`;
         case 'actions':    return `<td><button class="btn btn-rose btn-sm" onclick="openDetail('${d.id}')">Xem</button></td>`;
         default: return '<td>—</td>';
@@ -1164,6 +1166,14 @@ function htag(v, lbl) {
 function x(s) {
   if (!s) return '—';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function confirmBadge(status, reason) {
+  if (!status) return '<span class="tag" style="background:#f3f3f3;color:#aaa;">Chưa XN</span>';
+  const labels = { dong_y: 'Đồng ý', tu_choi: 'Từ chối', hen_lich_khac: 'Hẹn lịch khác', ly_do_khac: 'Lý do khác' };
+  const cls = { dong_y: 'tag-yes', tu_choi: 'tag-no', hen_lich_khac: 'tag-warn', ly_do_khac: 'tag-warn' };
+  const label = labels[status] || status;
+  const extra = reason ? '<br><span style="font-size:0.7rem;color:var(--muted);">' + x(reason) + '</span>' : '';
+  return '<span class="tag ' + (cls[status] || '') + '" style="display:inline-block;">' + label + extra + '</span>';
 }
 function fmtDate(iso) {
   const d = new Date(iso);
@@ -1211,6 +1221,7 @@ async function openDetail(id) {
         ${df('Đã liên hệ', x(d.pandora_contact))}
         ${df('Đã phỏng vấn', x(d.pandora_interview))}
         ${df('Nhà thầu Pandora', x(d.pandora_contractor))}
+        ${df('Xác nhận tham dự', confirmBadge(d.confirmation_status, d.confirmation_reason))}
 
         <div class="dg-section">Ngân hàng</div>
         ${df('Tên ngân hàng', x(d.bank_name))}
@@ -1268,7 +1279,9 @@ function exportXLSX() {
     'Run tay','Cận thị','Mồ hôi tay',
     'Học vấn','Công ty gần nhất','Năm kinh nghiệm','Lương kỳ vọng','Ngày bắt đầu',
     'Pandora đã liên hệ','Đã phỏng vấn','Nhà thầu Pandora',
-    'Tên ngân hàng','Số TK ngân hàng','Ngày gửi hồ sơ',
+    'Tên ngân hàng','Số TK ngân hàng',
+    'Xác nhận tham dự','Lý do xác nhận','Ngày xác nhận',
+    'Ngày gửi hồ sơ',
     ...cfHeaders
   ];
 
@@ -1280,7 +1293,14 @@ function exportXLSX() {
       d.run_tay, d.can_thi, d.mo_hoi_tay,
       d.education, d.company, Number(d.experience), d.salary, d.start_date,
       d.pandora_contact, d.pandora_interview, d.pandora_contractor,
-      d.bank_name, d.bank_account, fmtDate(d.timestamp),
+      d.bank_name, d.bank_account,
+      (() => {
+        const labels = { dong_y: 'Đồng ý', tu_choi: 'Từ chối', hen_lich_khac: 'Hẹn lịch khác', ly_do_khac: 'Lý do khác' };
+        return labels[d.confirmation_status] || d.confirmation_status || '';
+      })(),
+      d.confirmation_reason || '',
+      d.confirmation_timestamp ? fmtDate(d.confirmation_timestamp) : '',
+      fmtDate(d.timestamp),
       ...customFieldDefs.map(f => cd[f.id] || ''),
     ];
   });
@@ -1292,7 +1312,9 @@ function exportXLSX() {
     {wch:8},{wch:8},{wch:10},
     {wch:10},{wch:24},{wch:8},{wch:14},{wch:12},
     {wch:16},{wch:14},{wch:16},
-    {wch:24},{wch:16},{wch:20},
+    {wch:24},{wch:16},
+    {wch:18},{wch:24},{wch:20},
+    {wch:20},
     ...customFieldDefs.map(() => ({wch:20})),
   ];
 
@@ -1491,6 +1513,18 @@ function renderStats() {
         ${row('Pandora đã liên hệ', pandoraLienHe)}
         ${row('Đã phỏng vấn', pandoraPV)}
         ${row('Đang là nhà thầu', nhaThau)}
+      </table>
+    </div>
+
+    <!-- Xác nhận tham dự -->
+    <div class="stats-card">
+      <div class="stats-card-head"><span>📋</span><span class="stats-card-title">Xác nhận tham dự phỏng vấn</span></div>
+      <table class="stats-table">
+        ${row('Đồng ý tham dự', cnt('confirmation_status','dong_y'), '', 'green')}
+        ${row('Từ chối', cnt('confirmation_status','tu_choi'), '', 'rose')}
+        ${row('Hẹn lịch khác', cnt('confirmation_status','hen_lich_khac'))}
+        ${row('Lý do khác', cnt('confirmation_status','ly_do_khac'))}
+        ${row('Chưa xác nhận', cntF(r => !r.confirmation_status))}
       </table>
     </div>
 

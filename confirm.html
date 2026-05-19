@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pandora – Xác nhận tham dự phỏng vấn</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --rose:       #c4687a;
+    --rose-dark:  #9e4f5f;
+    --rose-mid:   #d4879a;
+    --rose-light: #f5dde1;
+    --rose-pale:  #fdf8f8;
+    --charcoal:   #1c1c1c;
+    --text:       #2c2c2c;
+    --muted:      #8a8a8a;
+    --border:     #e8d0d4;
+    --white:      #ffffff;
+    --danger:     #b5565a;
+    --success:    #2d7a4f;
+    --warning:    #c07a2f;
+    --shadow:     0 4px 20px rgba(196,104,122,0.14);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: var(--rose-pale);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Header */
+  .brand-header { background: var(--white); border-bottom: 1px solid var(--border); padding: 20px 0 0; text-align: center; }
+  .brand-logo { letter-spacing: 0.35em; font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 1.6rem; color: var(--charcoal); text-transform: uppercase; }
+  .brand-divider { width: 40px; height: 1px; background: var(--rose); margin: 10px auto 8px; }
+  .brand-subtitle { font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); padding-bottom: 18px; }
+  .brand-accent { height: 3px; background: linear-gradient(90deg, var(--rose-mid), var(--rose)); }
+
+  .container { max-width: 520px; margin: 0 auto; padding: 36px 16px 80px; flex: 1; }
+
+  /* Steps indicator */
+  .steps { display: flex; align-items: center; gap: 0; margin-bottom: 28px; }
+  .step { flex: 1; text-align: center; }
+  .step-circle {
+    width: 32px; height: 32px; border-radius: 50%; margin: 0 auto 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.78rem; font-weight: 600;
+    border: 2px solid var(--border); background: var(--white); color: var(--muted);
+    transition: all 0.3s;
+  }
+  .step.active .step-circle { border-color: var(--rose); background: var(--rose); color: #fff; }
+  .step.done .step-circle { border-color: var(--success); background: var(--success); color: #fff; }
+  .step-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+  .step.active .step-label { color: var(--rose); font-weight: 600; }
+  .step-line { flex: 0 0 40px; height: 1px; background: var(--border); }
+
+  /* Card */
+  .card { background: var(--white); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); overflow: hidden; }
+  .card-head {
+    padding: 16px 22px; border-bottom: 1px solid var(--rose-light);
+    background: linear-gradient(135deg, #fffafa 0%, #fdf0f2 100%);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .card-icon { font-size: 1.2rem; }
+  .card-title { font-family: 'Cormorant Garamond', serif; font-size: 1.05rem; font-weight: 600; color: var(--charcoal); }
+  .card-body { padding: 24px; }
+
+  /* Notice */
+  .notice {
+    background: var(--white); border: 1px solid var(--border);
+    border-left: 3px solid var(--rose-mid); border-radius: 8px;
+    padding: 13px 16px; margin-bottom: 22px; font-size: 0.8rem; color: var(--muted); line-height: 1.7;
+  }
+  .notice strong { color: var(--rose-dark); }
+
+  /* Existing confirmation notice */
+  .existing-notice {
+    background: #fff8e1; border: 1px solid #ffe082; border-radius: 8px;
+    padding: 11px 15px; margin-bottom: 18px; font-size: 0.8rem; color: #5d4037;
+  }
+  .existing-notice strong { color: #3e2723; }
+
+  /* Fields */
+  .field { margin-bottom: 20px; }
+  .field:last-child { margin-bottom: 0; }
+  label.fl { display: block; font-size: 0.78rem; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 7px; }
+  .req { color: var(--rose); margin-left: 2px; }
+  input[type="text"] {
+    width: 100%; border: 1px solid var(--border); background: var(--white);
+    border-radius: 6px; padding: 11px 14px; font-size: 0.92rem;
+    font-family: 'DM Sans', sans-serif; color: var(--text);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  input:focus, textarea:focus { outline: none; border-color: var(--rose); box-shadow: 0 0 0 3px rgba(196,104,122,0.12); }
+  input.err, textarea.err { border-color: var(--danger); }
+  textarea {
+    width: 100%; border: 1px solid var(--border); background: var(--white);
+    border-radius: 6px; padding: 11px 14px; font-size: 0.92rem;
+    font-family: 'DM Sans', sans-serif; color: var(--text);
+    transition: border-color 0.2s, box-shadow 0.2s; resize: vertical;
+  }
+  .ferr { font-size: 0.75rem; color: var(--danger); margin-top: 5px; display: none; }
+  .ferr.show { display: block; }
+
+  /* Verified name badge */
+  .name-badge {
+    display: flex; align-items: center; gap: 10px;
+    background: #edf7f1; border: 1px solid #a8d5bc; border-radius: 8px;
+    padding: 12px 16px; margin-bottom: 20px;
+  }
+  .name-badge-icon { font-size: 1.3rem; }
+  .name-badge-text { font-size: 0.85rem; color: var(--success); }
+  .name-badge-text strong { font-size: 1rem; display: block; margin-bottom: 1px; }
+
+  /* Confirmation options */
+  .confirm-options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .confirm-opt {
+    position: relative;
+  }
+  .confirm-opt input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+  .confirm-opt-card {
+    display: flex; align-items: center; gap: 12px;
+    border: 1.5px solid var(--border); border-radius: 8px;
+    padding: 14px 16px; cursor: pointer;
+    transition: all 0.2s; background: var(--white);
+  }
+  .confirm-opt-card:hover { border-color: var(--rose-mid); background: #fffafa; }
+  .confirm-opt input[type="radio"]:checked + .confirm-opt-card {
+    border-color: var(--rose); background: var(--rose-pale);
+    box-shadow: 0 0 0 3px rgba(196,104,122,0.1);
+  }
+  .confirm-opt-icon { font-size: 1.4rem; flex-shrink: 0; width: 36px; text-align: center; }
+  .confirm-opt-text { flex: 1; }
+  .confirm-opt-label { font-size: 0.9rem; font-weight: 500; color: var(--charcoal); }
+  .confirm-opt-desc { font-size: 0.74rem; color: var(--muted); margin-top: 2px; }
+
+  /* Reason textarea (shown when Lý do khác selected) */
+  #reason-wrap { display: none; margin-bottom: 20px; }
+
+  /* Buttons */
+  .btn-rose {
+    width: 100%; background: var(--rose); color: #fff; border: none; border-radius: 50px;
+    padding: 13px; font-size: 0.88rem; font-weight: 500; font-family: 'DM Sans', sans-serif;
+    letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s; box-shadow: 0 4px 14px rgba(196,104,122,0.28);
+  }
+  .btn-rose:hover { background: var(--rose-dark); }
+  .btn-rose:disabled { background: #d4a5ad; box-shadow: none; cursor: not-allowed; }
+  .btn-ghost {
+    width: 100%; background: transparent; color: var(--rose); border: 1.5px solid var(--rose);
+    border-radius: 50px; padding: 11px; font-size: 0.82rem; font-weight: 500;
+    font-family: 'DM Sans', sans-serif; letter-spacing: 0.1em; text-transform: uppercase;
+    cursor: pointer; transition: all 0.2s; margin-top: 10px;
+  }
+  .btn-ghost:hover { background: var(--rose-light); }
+
+  /* Success view */
+  #success-view {
+    display: none; text-align: center;
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 12px; padding: 48px 28px; box-shadow: var(--shadow);
+  }
+  .success-circle {
+    width: 72px; height: 72px; border-radius: 50%;
+    margin: 0 auto 18px; display: flex; align-items: center; justify-content: center; font-size: 2rem;
+  }
+  .sc-ok { background: #edf7f1; }
+  .sc-warn { background: #fff8e1; }
+  .sc-danger { background: #fce8e9; }
+  #success-view h2 { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 600; color: var(--charcoal); margin-bottom: 10px; }
+  #success-view p { font-size: 0.88rem; color: var(--muted); line-height: 1.8; }
+
+  .footer-note { text-align: center; font-size: 0.72rem; color: #ccc; margin-top: 28px; }
+  .footer-note a { color: var(--rose-mid); text-decoration: none; }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 600px) {
+    .container { padding: 20px 12px 60px; }
+    .card-body { padding: 16px; }
+    .card-head { padding: 14px 16px; }
+    input[type="text"], textarea {
+      font-size: 1rem;
+      padding: 12px 14px;
+    }
+    .btn-rose, .btn-ghost { padding: 14px; font-size: 0.88rem; }
+    .steps { gap: 0; }
+    .step-label { font-size: 0.64rem; }
+    .confirm-opt-card { padding: 12px 14px; }
+    .confirm-opt-label { font-size: 0.84rem; }
+  }
+
+  @media (max-width: 420px) {
+    .container { padding: 12px 8px 60px; }
+    .brand-logo { font-size: 1.3rem; letter-spacing: 0.25em; }
+    .brand-subtitle { font-size: 0.65rem; }
+    .card-body { padding: 14px; }
+    .card-head { gap: 8px; }
+    .card-title { font-size: 0.95rem; }
+    .step-line { flex: 0 0 24px; }
+    .step-circle { width: 28px; height: 28px; font-size: 0.72rem; }
+    .notice { padding: 10px 12px; font-size: 0.78rem; }
+    .field { margin-bottom: 16px; }
+    label.fl { font-size: 0.72rem; }
+    .name-badge { padding: 10px 12px; }
+    .name-badge-text strong { font-size: 0.92rem; }
+    .existing-notice { font-size: 0.76rem; padding: 10px 12px; }
+    #success-view { padding: 36px 16px; }
+    #success-view h2 { font-size: 1.3rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="brand-header">
+  <div class="brand-logo">Pandora</div>
+  <div class="brand-divider"></div>
+  <div class="brand-subtitle">Xác nhận tham dự phỏng vấn</div>
+  <div class="brand-accent"></div>
+</div>
+
+<div class="container">
+
+  <!-- Success view -->
+  <div id="success-view">
+    <div class="success-circle sc-ok" id="success-icon">✅</div>
+    <h2 id="success-title">Xác nhận thành công!</h2>
+    <p id="success-msg">Phản hồi của bạn đã được ghi nhận.<br>Bộ phận Nhân sự sẽ cập nhật lịch phỏng vấn phù hợp.</p>
+  </div>
+
+  <!-- Main view -->
+  <div id="main-view">
+
+    <!-- Steps -->
+    <div class="steps">
+      <div class="step active" id="step1">
+        <div class="step-circle" id="sc1">1</div>
+        <div class="step-label">Xác minh</div>
+      </div>
+      <div class="step-line"></div>
+      <div class="step" id="step2">
+        <div class="step-circle" id="sc2">2</div>
+        <div class="step-label">Xác nhận</div>
+      </div>
+    </div>
+
+    <div class="notice">
+      <strong>Hướng dẫn:</strong> Nhập <strong>số CCCD</strong> đã dùng khi đăng ký để xác minh danh tính, sau đó chọn phản hồi về việc tham dự phỏng vấn. Bạn có thể gửi lại nếu muốn thay đổi.
+    </div>
+
+    <!-- Step 1: Verify CCCD -->
+    <div id="view-step1" class="card">
+      <div class="card-head">
+        <div class="card-icon">🪪</div>
+        <div class="card-title">Bước 1 — Xác minh CCCD</div>
+      </div>
+      <div class="card-body">
+        <div class="field">
+          <label class="fl">Số căn cước công dân <span class="req">*</span></label>
+          <input type="text" id="cccd-input" placeholder="012345678901" maxlength="12"
+            inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'')">
+          <div class="ferr" id="e-cccd">Số CCCD phải có 9 – 12 chữ số</div>
+          <div class="ferr" id="e-notfound">Không tìm thấy hồ sơ với số CCCD này. Vui lòng kiểm tra lại.</div>
+        </div>
+        <button class="btn-rose" id="verify-btn" onclick="doVerify()">Xác minh →</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Confirmation options -->
+    <div id="view-step2" style="display:none;">
+      <div id="name-badge" class="name-badge">
+        <div class="name-badge-icon">👤</div>
+        <div class="name-badge-text">
+          <strong id="verified-name">—</strong>
+          Đã xác minh danh tính thành công
+        </div>
+      </div>
+
+      <div id="existing-info" class="existing-notice" style="display:none;">
+        ⚠️ Bạn đã xác nhận trước đó: <strong id="existing-status"></strong>. Gửi lại bên dưới để <strong>cập nhật lại</strong>.
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon">📋</div>
+          <div class="card-title">Bước 2 — Xác nhận tham dự phỏng vấn</div>
+        </div>
+        <div class="card-body">
+          <label class="fl" style="margin-bottom:12px;">Vui lòng chọn phản hồi <span class="req">*</span></label>
+
+          <div class="confirm-options">
+            <label class="confirm-opt">
+              <input type="radio" name="confirm-status" value="dong_y" onchange="onStatusChange()">
+              <div class="confirm-opt-card">
+                <div class="confirm-opt-icon">✅</div>
+                <div class="confirm-opt-text">
+                  <div class="confirm-opt-label">Đồng ý tham dự</div>
+                  <div class="confirm-opt-desc">Tôi sẽ có mặt theo lịch hẹn phỏng vấn</div>
+                </div>
+              </div>
+            </label>
+
+            <label class="confirm-opt">
+              <input type="radio" name="confirm-status" value="tu_choi" onchange="onStatusChange()">
+              <div class="confirm-opt-card">
+                <div class="confirm-opt-icon">❌</div>
+                <div class="confirm-opt-text">
+                  <div class="confirm-opt-label">Từ chối tham dự</div>
+                  <div class="confirm-opt-desc">Tôi không thể tham gia buổi phỏng vấn này</div>
+                </div>
+              </div>
+            </label>
+
+            <label class="confirm-opt">
+              <input type="radio" name="confirm-status" value="hen_lich_khac" onchange="onStatusChange()">
+              <div class="confirm-opt-card">
+                <div class="confirm-opt-icon">📅</div>
+                <div class="confirm-opt-text">
+                  <div class="confirm-opt-label">Hẹn lịch khác</div>
+                  <div class="confirm-opt-desc">Tôi muốn sắp xếp một buổi phỏng vấn vào thời gian khác</div>
+                </div>
+              </div>
+            </label>
+
+            <label class="confirm-opt">
+              <input type="radio" name="confirm-status" value="ly_do_khac" onchange="onStatusChange()">
+              <div class="confirm-opt-card">
+                <div class="confirm-opt-icon">💬</div>
+                <div class="confirm-opt-text">
+                  <div class="confirm-opt-label">Lý do khác</div>
+                  <div class="confirm-opt-desc">Tôi có lý do riêng (vui lòng ghi rõ bên dưới)</div>
+                </div>
+              </div>
+            </label>
+          </div>
+
+          <div class="ferr" id="e-status">Vui lòng chọn một phản hồi</div>
+
+          <div class="field" id="reason-wrap">
+            <label class="fl">Lý do chi tiết <span class="req">*</span></label>
+            <textarea id="reason-input" rows="3" placeholder="Vui lòng nhập lý do của bạn..."></textarea>
+            <div class="ferr" id="e-reason">Vui lòng nhập lý do</div>
+          </div>
+
+          <button class="btn-rose" id="submit-btn" onclick="doSubmit()">Gửi xác nhận</button>
+          <button class="btn-ghost" onclick="resetToStep1()">← Nhập lại CCCD khác</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main-view -->
+
+  <div class="footer-note">
+    <a href="/">← Quay lại form đăng ký</a> &nbsp;·&nbsp; Dữ liệu bảo mật theo NĐ 13/2023/NĐ-CP
+  </div>
+
+</div>
+
+<script>
+// ── Step 1: Verify CCCD ───────────────────────────────
+async function doVerify() {
+  const cccd = document.getElementById('cccd-input').value.trim();
+  hideE('e-cccd'); hideE('e-notfound');
+
+  if (!/^\d{9,12}$/.test(cccd)) { showE('e-cccd'); return; }
+
+  const btn = document.getElementById('verify-btn');
+  btn.disabled = true; btn.textContent = 'Đang xác minh…';
+
+  try {
+    const res = await fetch('/api/confirm?cccd=' + encodeURIComponent(cccd));
+    const json = await res.json();
+
+    if (!json.ok) {
+      showE('e-notfound');
+      btn.disabled = false; btn.textContent = 'Xác minh →';
+      return;
+    }
+
+    document.getElementById('verified-name').textContent = json.fullname || 'Ứng viên';
+
+    if (json.hasConfirmed) {
+      const labels = {
+        dong_y: 'Đồng ý tham dự',
+        tu_choi: 'Từ chối tham dự',
+        hen_lich_khac: 'Hẹn lịch khác',
+        ly_do_khac: 'Lý do khác',
+      };
+      let prevText = labels[json.confirmationStatus] || json.confirmationStatus;
+      if (json.confirmationReason) prevText += ' — ' + json.confirmationReason;
+      document.getElementById('existing-info').style.display = 'block';
+      document.getElementById('existing-status').textContent = prevText;
+    }
+
+    document.getElementById('view-step1').style.display = 'none';
+    document.getElementById('view-step2').style.display = 'block';
+
+    document.getElementById('step1').classList.remove('active');
+    document.getElementById('step1').classList.add('done');
+    document.getElementById('sc1').textContent = '✓';
+    document.getElementById('step2').classList.add('active');
+
+  } catch (err) {
+    alert('Lỗi kết nối. Vui lòng thử lại.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Xác minh →';
+  }
+}
+
+// Enter key on CCCD input
+document.getElementById('cccd-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doVerify();
+});
+
+// ── Status change handler ──────────────────────────────
+function onStatusChange() {
+  const val = document.querySelector('input[name="confirm-status"]:checked')?.value;
+  const reasonWrap = document.getElementById('reason-wrap');
+  if (val === 'ly_do_khac') {
+    reasonWrap.style.display = 'block';
+  } else if (val === 'hen_lich_khac') {
+    reasonWrap.style.display = 'block';
+    document.querySelector('#reason-wrap label.fl').textContent = 'Thời gian mong muốn';
+    document.querySelector('#reason-wrap label.fl').innerHTML = 'Thời gian mong muốn <span class="req">*</span>';
+  } else {
+    reasonWrap.style.display = 'none';
+    if (val === 'dong_y') {
+      document.querySelector('#reason-wrap label.fl').textContent = 'Lý do chi tiết';
+    }
+  }
+  hideE('e-status');
+}
+
+// ── Step 2: Submit confirmation ────────────────────────
+async function doSubmit() {
+  const selected = document.querySelector('input[name="confirm-status"]:checked');
+  let ok = true;
+
+  if (!selected) { showE('e-status'); ok = false; } else hideE('e-status');
+  if (!ok) return;
+
+  const status = selected.value;
+  let reason = '';
+
+  if (status === 'ly_do_khac') {
+    reason = document.getElementById('reason-input').value.trim();
+    if (!reason) { showE('e-reason'); return; }
+    hideE('e-reason');
+  }
+  if (status === 'hen_lich_khac') {
+    reason = document.getElementById('reason-input').value.trim();
+  }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true; btn.textContent = 'Đang gửi…';
+
+  const cccd = document.getElementById('cccd-input').value.trim();
+
+  try {
+    const res = await fetch('/api/confirm', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cccd, status, reason }),
+    });
+    const json = await res.json();
+    if (!json.ok) throw new Error(json.error || 'Server error');
+
+    // Show success view
+    document.getElementById('main-view').style.display = 'none';
+    const sv = document.getElementById('success-view');
+    sv.style.display = 'block';
+
+    const icon = document.getElementById('success-icon');
+    const title = document.getElementById('success-title');
+    const msg = document.getElementById('success-msg');
+    icon.className = 'success-circle';
+
+    switch (status) {
+      case 'dong_y':
+        icon.classList.add('sc-ok');
+        icon.textContent = '✅';
+        title.textContent = 'Xác nhận tham dự thành công!';
+        msg.innerHTML = `Cảm ơn <strong>${json.fullname || 'bạn'}</strong> đã xác nhận.<br>Bộ phận Nhân sự sẽ liên hệ trước buổi phỏng vấn.`;
+        break;
+      case 'tu_choi':
+        icon.classList.add('sc-danger');
+        icon.textContent = '📩';
+        title.textContent = 'Đã ghi nhận từ chối';
+        msg.innerHTML = `Cảm ơn <strong>${json.fullname || 'bạn'}</strong> đã phản hồi.<br>Chúng tôi rất tiếc vì chưa có cơ hội gặp bạn đợt này.`;
+        break;
+      case 'hen_lich_khac':
+        icon.classList.add('sc-warn');
+        icon.textContent = '📅';
+        title.textContent = 'Yêu cầu đã được ghi nhận';
+        msg.innerHTML = `<strong>${json.fullname || 'Bạn'}</strong> muốn hẹn lịch khác.<br>Bộ phận Nhân sự sẽ liên hệ để sắp xếp thời gian phù hợp.`;
+        break;
+      case 'ly_do_khac':
+        icon.classList.add('sc-warn');
+        icon.textContent = '📋';
+        title.textContent = 'Phản hồi đã được ghi nhận';
+        msg.innerHTML = `Cảm ơn <strong>${json.fullname || 'bạn'}</strong> đã phản hồi.<br>Bộ phận Nhân sự sẽ liên hệ trao đổi thêm nếu cần.`;
+        break;
+    }
+
+    window.scrollTo(0, 0);
+  } catch (err) {
+    alert('Gửi thất bại: ' + err.message + '\nVui lòng thử lại.');
+    btn.disabled = false; btn.textContent = 'Gửi xác nhận';
+  }
+}
+
+// ── Reset về step 1 ───────────────────────────────────
+function resetToStep1() {
+  document.getElementById('view-step2').style.display = 'none';
+  document.getElementById('view-step1').style.display = 'block';
+  document.getElementById('existing-info').style.display = 'none';
+  document.getElementById('reason-wrap').style.display = 'none';
+
+  document.getElementById('step1').classList.add('active');
+  document.getElementById('step1').classList.remove('done');
+  document.getElementById('sc1').textContent = '1';
+  document.getElementById('step2').classList.remove('active');
+
+  document.getElementById('cccd-input').value = '';
+  document.getElementById('reason-input').value = '';
+  document.querySelectorAll('input[name="confirm-status"]').forEach(r => r.checked = false);
+}
+
+// ── Error helpers ─────────────────────────────────────
+function showE(id) { const e = document.getElementById(id); if (e) e.classList.add('show'); }
+function hideE(id) { const e = document.getElementById(id); if (e) e.classList.remove('show'); }
+</script>
+</body>
+</html>

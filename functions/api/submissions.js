@@ -12,7 +12,8 @@ export async function onRequestGet({ request, env }) {
            cccd, cccd_date, cccd_place, run_tay, can_thi, mo_hoi_tay,
            education, company, experience, salary, start_date,
            pandora_contact, pandora_interview, pandora_contractor,
-           bank_name, bank_account, custom_data
+           bank_name, bank_account, custom_data,
+           confirmation_status, confirmation_reason, confirmation_timestamp
     FROM submissions ORDER BY timestamp DESC
   `).all();
 
