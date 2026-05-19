@@ -866,6 +866,13 @@
               <option value="Có">Đang ở Pandora</option>
               <option value="Không">Không</option>
             </select>
+            <div style="position:relative;">
+              <button class="fsel" id="fconfirm-btn" onclick="toggleConfirmFilter(event)" style="white-space:nowrap;">XN tham dự ▾</button>
+              <div class="col-panel" id="confirm-filter-panel" style="min-width:170px;">
+                <div class="col-panel-title">Xác nhận tham dự</div>
+                <div style="padding:0 16px 10px;display:flex;flex-direction:column;gap:6px;" id="confirm-filter-checks"></div>
+              </div>
+            </div>
           </div>
           <div class="tbl-wrap">
             <table>
@@ -1005,6 +1012,51 @@ function toggleColPanel(e) {
 }
 document.addEventListener('click', () => document.getElementById('col-panel')?.classList.remove('open'));
 
+// ── Confirmation filter ──────────────────────────────────
+const CONFIRM_OPTIONS = [
+  { key: '',          label: 'Chưa xác nhận' },
+  { key: 'dong_y',     label: 'Đồng ý' },
+  { key: 'tu_choi',    label: 'Từ chối' },
+  { key: 'hen_lich_khac', label: 'Hẹn lịch khác' },
+  { key: 'ly_do_khac',    label: 'Lý do khác' },
+];
+
+function getConfirmFilter() {
+  try { return JSON.parse(localStorage.getItem('pandora_confirm_filter') || '[]'); } catch { return []; }
+}
+function setConfirmFilter(arr) { localStorage.setItem('pandora_confirm_filter', JSON.stringify(arr)); }
+
+function buildConfirmFilter() {
+  const sel = getConfirmFilter();
+  document.getElementById('confirm-filter-checks').innerHTML = CONFIRM_OPTIONS.map(o => {
+    const checked = sel.includes(o.key);
+    return `<label class="col-item">
+      <input type="checkbox" ${checked ? 'checked' : ''} onchange="onConfirmFilterToggle('${o.key}',this.checked)">
+      <span>${o.label}</span>
+    </label>`;
+  }).join('');
+}
+
+function onConfirmFilterToggle(key, val) {
+  const sel = getConfirmFilter();
+  const idx = sel.indexOf(key);
+  if (val && idx === -1) sel.push(key);
+  if (!val && idx !== -1) sel.splice(idx, 1);
+  setConfirmFilter(sel);
+  render();
+}
+
+function toggleConfirmFilter(e) {
+  e.stopPropagation();
+  document.getElementById('confirm-filter-panel').classList.toggle('open');
+}
+document.addEventListener('click', (e) => {
+  const panel = document.getElementById('confirm-filter-panel');
+  if (panel && !panel.contains(e.target) && e.target.id !== 'fconfirm-btn') {
+    panel.classList.remove('open');
+  }
+});
+
 // ── Login ─────────────────────────────────────────────
 async function doLogin() {
   const u = document.getElementById('lu').value.trim();
@@ -1026,7 +1078,8 @@ async function doLogin() {
     document.getElementById('dash').style.display = 'block';
     document.getElementById('uname').textContent = u;
     buildColPanel();
-    renderTable(cache);
+    buildConfirmFilter();
+    renderTable();
     updateMini(cache);
   } catch {
     document.getElementById('lerr').classList.add('on');
@@ -1066,7 +1119,8 @@ async function reload() {
       fetch('/api/fields').then(r => r.json()),
     ]);
     buildColPanel();
-    renderTable(cache);
+    buildConfirmFilter();
+    renderTable();
     updateMini(cache);
   } catch (e) { alert('Lỗi tải dữ liệu: ' + e.message); }
 }
@@ -1093,23 +1147,10 @@ function updateMini(d) {
 }
 
 // ── Table ─────────────────────────────────────────────
-function render() { renderTable(cache); }
+function render() { renderTable(); }
 
-function renderTable(all) {
-  const q  = (document.getElementById('q').value||'').toLowerCase();
-  const fg = document.getElementById('fg').value;
-  const fe = document.getElementById('fe').value;
-  const fp = document.getElementById('fp').value;
-  const fc = document.getElementById('fc').value;
-
-  const rows = all.filter(d => {
-    const mq = !q || [d.fullname,d.phone,d.email,d.cccd].some(v=>(v||'').toLowerCase().includes(q));
-    return mq
-      && (!fg || d.gender===fg)
-      && (!fe || d.education===fe)
-      && (!fp || d.pandora_contact===fp)
-      && (!fc || d.pandora_contractor===fc);
-  });
+function renderTable() {
+  const rows = getFilteredRows();
 
   // Build visible column list
   const visCols = FIXED_COLS.filter(c => isColVisible(c.key));
@@ -1268,8 +1309,29 @@ function badge(v) {
 function closeM(id) { document.getElementById(id).classList.remove('open'); }
 
 // ── Export XLSX ───────────────────────────────────────
+function getFilteredRows() {
+  if (!cache.length) return [];
+  const q  = (document.getElementById('q').value||'').toLowerCase();
+  const fg = document.getElementById('fg').value;
+  const fe = document.getElementById('fe').value;
+  const fp = document.getElementById('fp').value;
+  const fc = document.getElementById('fc').value;
+  const cf = getConfirmFilter();
+
+  return cache.filter(d => {
+    const mq = !q || [d.fullname,d.phone,d.email,d.cccd].some(v=>(v||'').toLowerCase().includes(q));
+    return mq
+      && (!fg || d.gender===fg)
+      && (!fe || d.education===fe)
+      && (!fp || d.pandora_contact===fp)
+      && (!fc || d.pandora_contractor===fc)
+      && (!cf.length || cf.includes(d.confirmation_status || ''));
+  });
+}
+
 function exportXLSX() {
-  if (!cache.length) { alert('Chưa có dữ liệu để xuất.'); return; }
+  const filtered = getFilteredRows();
+  if (!filtered.length) { alert('Không có dữ liệu để xuất (sau khi lọc).'); return; }
 
   const cfHeaders = customFieldDefs.map(f => f.label);
 
@@ -1285,7 +1347,7 @@ function exportXLSX() {
     ...cfHeaders
   ];
 
-  const rows = cache.map(d => {
+  const rows = filtered.map(d => {
     const cd = (() => { try { return JSON.parse(d.custom_data || '{}'); } catch { return {}; } })();
     return [
       d.id, d.fullname, d.phone, d.email, Number(d.age), d.gender, d.address,
